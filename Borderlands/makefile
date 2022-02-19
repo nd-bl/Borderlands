@@ -6,7 +6,8 @@ UNAME := $(shell uname)
 
 
 ifeq ($(UNAME), Linux)
-FLAGS=-D__LINUX_ALSASEQ__ -D__UNIX_JACK__  -DOSC_HOST_LITTLE_ENDIAN -c
+#FLAGS=-D__LINUX_ALSASEQ__ -D__UNIX_JACK__  -DOSC_HOST_LITTLE_ENDIAN -c
+FLAGS=-D__LINUX_ALSASEQ__ -D__LINUX_ALSA__  -DOSC_HOST_LITTLE_ENDIAN -c -g -O3
 LIBS=-lasound -lpthread -ljack -lstdc++ -lglut -lGL -lGLU -lm -lsndfile
 endif
 ifeq ($(UNAME), Darwin)
