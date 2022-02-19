@@ -48,7 +48,7 @@ MyRtAudio::MyRtAudio(unsigned int numIns, unsigned int numOuts, unsigned int sra
     //create the object
     try {
         audio = new RtAudio();
-    } catch (RtError & err) {
+    } catch (RtAudioError & err) {
         err.printMessage();
         exit(1);
     }
@@ -124,7 +124,7 @@ void MyRtAudio::stopStream(){
     //try to stop audio stream
     try {
         audio->stopStream();
-    } catch( RtError & err) {
+    } catch( RtAudioError & err) {
         err.printMessage();
     }
 }

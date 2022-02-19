@@ -40,6 +40,8 @@
 #include <GL/glut.h>
 #endif
 
+#include "RtAudio.h"
+
 //other libraries
 #include <iostream>
 #include <vector>
@@ -190,7 +192,7 @@ void cleaningFunction(){
     try {
         theAudio->stopStream();
         theAudio->closeStream();
-    } catch (RtError &err) {
+    } catch (RtAudioError &err) {
         err.printMessage();
     }
     if (mySounds != NULL)
@@ -1699,7 +1701,7 @@ int main (int argc, char ** argv)
     //create the object
     try {
         theAudio = new MyRtAudio(1,MY_CHANNELS, MY_SRATE, &g_buffSize, MY_FORMAT,true);
-    } catch (RtError & err) {
+    } catch (RtAudioError & err) {
         err.printMessage();
         exit(1);
     }    
@@ -1714,7 +1716,7 @@ int main (int argc, char ** argv)
         //report latency
         theAudio->reportStreamLatency();        
         
-    }catch (RtError & err )
+    }catch (RtAudioError & err )
     {
         err.printMessage();
         goto cleanup;
