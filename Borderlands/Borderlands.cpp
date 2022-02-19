@@ -69,6 +69,9 @@ using namespace std;
 unsigned int _screenWidth, _screenHeight;
 unsigned int _winWidth, _winHeight;
 
+// NOTE: start in windowed mode instead of fullscreen
+// otherwise, when quitting fullscreen, the windows would stay maximized
+// and would still take the whole screen (but with a top bar)
 //bool isFullScreen = true;
 bool isFullScreen = false;
 
