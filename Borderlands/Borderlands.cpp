@@ -69,6 +69,8 @@ using namespace std;
 unsigned int _screenWidth, _screenHeight;
 unsigned int _winWidth, _winHeight;
 
+//bool isFullScreen = true;
+bool isFullScreen = false;
 
 //-----------------------------------------------------------------------------
 // Defines a point in a 3D space (coords x, y and z)
@@ -278,21 +280,21 @@ void windowInit(){
     glutSpecialFunc( specialFunc );
 }
 
+void setWindowedMode()
+{
+    _winWidth = 0.6*_screenWidth;
+    _winHeight = 0.6*_screenHeight;
+    glutReshapeWindow(_winWidth,_winHeight);
+    
+    int centerXCorner = _screenWidth/2 - _winWidth/2;
+    int centerYCorner = _screenHeight/2 - _winHeight/2;
+    glutPositionWindow(centerXCorner,centerYCorner);
+}
 
 void toggleFullScreen(){
-    static bool isFullScreen = true;
-
-
     if (isFullScreen)
     {
-
-        _winWidth = 0.6*_screenWidth;
-        _winHeight = 0.6*_screenHeight;
-        glutReshapeWindow(_winWidth,_winHeight);
-
-        int centerXCorner = _screenWidth/2 - _winWidth/2;
-        int centerYCorner = _screenHeight/2 - _winHeight/2;
-        glutPositionWindow(centerXCorner,centerYCorner);
+        setWindowedMode();
         
         isFullScreen = false;
         /*
@@ -338,7 +340,6 @@ void toggleFullScreen(){
 
 }
 
-
 //-----------------------------------------------------------
 //  GLUT Initialization
 //-----------------------------------------------------------
@@ -354,11 +355,17 @@ void initialize()
     _screenWidth = glutGet(GLUT_SCREEN_WIDTH);
     _screenHeight = glutGet(GLUT_SCREEN_HEIGHT);
 
-    _winWidth = _screenWidth;
-    _winHeight = _screenHeight;
+    //_winWidth = _screenWidth;
+    //_winHeight = _screenHeight;
+
+    _winWidth = 0.6*_screenWidth;
+    _winHeight = 0.6*_screenHeight;
+    
     glutInitWindowSize (_winWidth,_winHeight);
     glutInitWindowPosition (0, 0);
     glutCreateWindow("Borderlands");
+
+    setWindowedMode();
     
 
     /*
@@ -420,10 +427,7 @@ void initialize()
     // set the special function - called on special keys events (fn, arrows, pgDown, etc)
     glutSpecialFunc( specialFunc );
     
-    glutFullScreen();
-    
-
-
+    //glutFullScreen();
 }
 
 
