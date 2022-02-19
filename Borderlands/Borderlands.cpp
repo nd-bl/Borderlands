@@ -172,6 +172,7 @@ void updateMouseCoords(int x, int y);
 void initialize();
 void draw_string( GLfloat x, GLfloat y, GLfloat z, const char * str, GLfloat scale);
 void printUsage();
+void printManual();
 void printParam();
 void drawAxis();
 int audioCallback( void * outputBuffer, void * inputBuffer, unsigned int numFrames, double streamTime,RtAudioStreamStatus status, void * userData);
@@ -437,6 +438,7 @@ void displayFunc()
             printParam();
     }else{
         printUsage();
+        printManual();
     }
     
     
@@ -563,6 +565,77 @@ void printUsage(){
     
 }
 
+//-----------------------------------------------------------------------------
+// Show all the commands and keys on screen.
+//-----------------------------------------------------------------------------
+void printManual(){
+    float smallSize = 0.03f;
+    float mediumSize = 0.04f;
+    glLineWidth(2.0f);
+    
+    //float theA = 0.6f + 0.2*sin(0.9*PI*GTime::instance().sec);
+    //float insColor = 0.8;
+    float insColor = 0.6;
+    glColor4f(insColor,insColor,insColor,insColor);
+
+    char *commands[] =
+        {
+            "Entry/Exit",
+            "------------",
+            "ESC              Quit",
+            "? key            Hide/Show Title Screen",
+            "",
+            "Rectangles",
+            "------------",
+            "Left click       Select",
+            "Drag             Move",
+            "TAB key          Cycle selection of overlapping rectangles under mouse",
+            "R key + drag     Resize",
+            "F key            Flip orientation",
+            "",
+            "Cloud Addition and Selection",
+            "------------",
+            "G key (+ shift)  Add (remove) cloud to/from end of collection",
+            "Delete key       Remove selected cloud",
+            "Left click       Select",
+            "Drag             Move",
+            "",
+            "Cloud Parameters",
+            "------------",
+            "V key (+ shift)  Add (remove) voices",
+            "A key            Toggle cloud on/off",
+            "D key (+ shift)  Increment (decrement) duration",
+            "D key + numbers  Enter duration value (ms) - press Enter to accept",
+            "S key (+ shift)  Increment (decrement) overlap",
+            "S key + numbers  Enter overlap value - press Enter to accept",
+            "Z key (+ shift)  Increment (decrement) pitch",
+            "Z key + numbers  Enter pitch value - press Enter to accept",
+            "W key            Change window type (HANNING, TRIANGLE, EXPDEC, REXPDEC, SINC, RANDOM)",
+            "W key + ",
+            "1 through 6      Jump to specific window type",
+            "F key            Switch grain direction (FORWARD, BACKWARD, RANDOM)",
+            "R key            Enable mouse control of XY extent of grain position randomness",
+            "X key            Enable mouse control of X extent of grain position randomness",
+            "Y key            Enable mouse control of Y extent of grain position randomness"
+        };
+            
+
+    //float x = screenWidth/2.0f - 0.2f*(float)screenWidth;
+    //float y = (float)screenHeight/2.0f - 0.2*(float)screenHeight;
+    float x = (float)screenWidth*0.1;
+    float y = (float)screenHeight*0.1;
+    
+    float yStep = (float)screenWidth*0.01f;
+    //float size = (float)screenWidth*0.04f;
+    float size = (float)screenWidth*0.06f;
+    
+    for (int i = 0; i < sizeof(commands)/sizeof(char *); i++)
+    {
+        const char *cmd = commands[i];
+        draw_string(x, y + i*yStep, 0.5,
+                    cmd, size);
+    }
+}
 
 void printParam(){
     if ((numClouds > 0) && (selectedCloud >=0)){
