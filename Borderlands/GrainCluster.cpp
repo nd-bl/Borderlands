@@ -586,11 +586,11 @@ GrainClusterVis::~GrainClusterVis(){
         delete myGrainsV;
 }
 
-GrainClusterVis::GrainClusterVis(float x, float y, unsigned int numVoices,vector<SoundRect*>*rects)
+GrainClusterVis::GrainClusterVis(unsigned int winWidth, unsigned int winHeight,
+                                 float x, float y, unsigned int numVoices,vector<SoundRect*>*rects)
 {
-    //get screen width and height
-    screenWidth = glutGet(GLUT_SCREEN_WIDTH);
-    screenHeight = glutGet(GLUT_SCREEN_HEIGHT);
+    _winWidth = winWidth;
+    _winHeight = winHeight;
     
     startTime = GTime::instance().sec;
     //cout << "cluster started at : " << startTime << " sec " << endl;
@@ -602,8 +602,8 @@ GrainClusterVis::GrainClusterVis(float x, float y, unsigned int numVoices,vector
 
     
     //randomness params
-    xRandExtent = 3.0;
-    yRandExtent = 3.0;
+    _xRandExtent = 3.0;
+    _yRandExtent = 3.0;
     
     //init add and remove flags to false
     addFlag = false;
@@ -622,18 +622,49 @@ GrainClusterVis::GrainClusterVis(float x, float y, unsigned int numVoices,vector
     
     for (int i = 0; i < numVoices; i++)
     {
-        myGrainsV->push_back(new GrainVis(gcX,gcY));
+        myGrainsV->push_back(new GrainVis(_winWidth,_winHeight,gcX,gcY));
     }
 
     numGrains = numVoices;
     
     
     //visualization stuff
-    minSelRad = 15.0f;
-    maxSelRad = 19.0f;
+    _minSelRad = 15.0f;
+    _maxSelRad = 19.0f;
     lambda = 0.997;
-    selRad = minSelRad;
-    targetRad = maxSelRad;
+    selRad = _minSelRad;
+    targetRad = _maxSelRad;
+}
+
+void
+GrainClusterVis::updateWinWidthHeight(unsigned int newWinWidth,
+                                      unsigned int newWinHeight)
+{
+    if ((_winWidth == newWinWidth) && 
+        (_winHeight == newWinHeight))
+        return;
+
+    // update the rect pos and size if window size changed
+    float wRatio = ((float)newWinWidth)/_winWidth;
+    float hRatio = ((float)newWinHeight)/_winHeight;
+
+    gcX *= wRatio;
+    gcY *= hRatio;
+
+    _xRandExtent *= wRatio;
+    _yRandExtent *= hRatio;
+        
+    /*_minSelRad *= wRatio;
+      _maxSelRad *= wRatio;
+      selRad = _minSelRad;
+      targetRad = _maxSelRad;
+    */
+
+    _winWidth = newWinWidth;
+    _winHeight = newWinHeight;
+
+    for (int i = 0; i < myGrainsV->size(); i++)
+        (*myGrainsV)[i]->updateWinWidthHeight(newWinWidth, newWinHeight);
 }
 
 void GrainClusterVis::setDuration(float dur){
@@ -665,7 +696,7 @@ void GrainClusterVis::draw()
     else
         glColor4f(0.0,0.4,0.7,0.3);
     
-    selRad = minSelRad + 0.5*(maxSelRad-minSelRad)*sin(2*PI*(freq*t_sec + 0.125));
+    selRad = _minSelRad + 0.5*(_maxSelRad-_minSelRad)*sin(2*PI*(freq*t_sec + 0.125));
     gluDisk(gluNewQuadric(),selRad, selRad+5.0, 128,2);
     glPopMatrix();
 
@@ -704,7 +735,7 @@ void GrainClusterVis::getTriggerPos(unsigned int idx, double * playPos, double *
         GrainVis * theGrain = myGrainsV->at(idx);
         //TODO: motion models
         //updateGrainPosition(idx,gcX + randf()*50.0 + randf()*(-50.0),gcY + randf()*50.0 + randf()*(-50.0));
-        updateGrainPosition(idx,gcX + (randf()*xRandExtent - randf()*xRandExtent),gcY + (randf()*yRandExtent - randf()*yRandExtent));
+        updateGrainPosition(idx,gcX + (randf()*_xRandExtent - randf()*_xRandExtent),gcY + (randf()*_yRandExtent - randf()*_yRandExtent));
         for (int i = 0; i < theLandscape->size(); i++) {
             theRect = theLandscape->at(i);
             bool tempTrig = false;
@@ -726,16 +757,16 @@ void GrainClusterVis::getTriggerPos(unsigned int idx, double * playPos, double *
 //rand cluster size
 void GrainClusterVis::setXRandExtent(float mouseX)
 {
-    xRandExtent = fabs(mouseX - gcX);
-    if (xRandExtent < 2.0f)
-        xRandExtent = 0.0f;
+    _xRandExtent = fabs(mouseX - gcX);
+    if (_xRandExtent < 2.0f)
+        _xRandExtent = 0.0f;
 }
 
 void GrainClusterVis::setYRandExtent(float mouseY)
 {
-    yRandExtent = fabs(mouseY - gcY);
-    if (yRandExtent < 2.0f)
-        yRandExtent = 0.0f;
+    _yRandExtent = fabs(mouseY - gcY);
+    if (_yRandExtent < 2.0f)
+        _yRandExtent = 0.0f;
 }
 void GrainClusterVis::setRandExtent(float mouseX,float mouseY)
 {
@@ -744,17 +775,17 @@ void GrainClusterVis::setRandExtent(float mouseX,float mouseY)
 }
 float GrainClusterVis::getXRandExtent()
 {
-    return xRandExtent;
+    return _xRandExtent;
 }
 float GrainClusterVis::getYRandExtent()
 {
-    return yRandExtent;
+    return _yRandExtent;
 }
 
 //
 void GrainClusterVis::updateCloudPosition(float x, float y){
     float xDiff = x - gcX;
-    float yDiff = y-gcY;
+    float yDiff = y - gcY;
     gcX = x;
     gcY = y;
     for (int i = 0; i < myGrainsV->size(); i++){
@@ -776,7 +807,7 @@ bool GrainClusterVis::select(float x, float y){
     float xdiff = x - gcX;
     float ydiff = y - gcY;
     
-    if (sqrt(xdiff*xdiff + ydiff*ydiff) < maxSelRad)
+    if (sqrt(xdiff*xdiff + ydiff*ydiff) < _maxSelRad)
         return true;
     else
         return false;
@@ -789,7 +820,7 @@ void GrainClusterVis::setSelectState(bool selectState){
 void GrainClusterVis::addGrain()
 {
 //    addFlag = true;
-    myGrainsV->push_back(new GrainVis(gcX,gcY));
+    myGrainsV->push_back(new GrainVis(_winWidth, _winHeight, gcX,gcY));
     numGrains= myGrainsV->size();
 }
 

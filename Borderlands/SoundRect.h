@@ -66,7 +66,11 @@ public:
     virtual ~SoundRect();
     
     //constructor (default)
-    SoundRect();
+    SoundRect(unsigned int winWidth, unsigned int winHeight);
+
+    // when win size changes
+    void updateWinWidthHeight(unsigned int newWinWidth,
+                              unsigned int newWinHeight);
     
     //other object initialization code
     void init();
@@ -115,7 +119,7 @@ protected:
     
 private:
     unsigned int myId;
-    unsigned int screenWidth,screenHeight;
+    unsigned int _winWidth, _winHeight;
     float rWidth,rHeight;
     float rtop,rbot,rleft,rright;
     float rX, rY,rZ;

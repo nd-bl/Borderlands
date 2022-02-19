@@ -43,10 +43,10 @@ SoundRect::~SoundRect()
 
 
 //constructor 
-SoundRect::SoundRect(){
+SoundRect::SoundRect(unsigned int winWidth, unsigned int winHeight){
     
-    screenWidth =  glutGet(GLUT_SCREEN_WIDTH);
-    screenHeight = glutGet(GLUT_SCREEN_HEIGHT);
+    _winWidth = winWidth;
+    _winHeight = winHeight;
     
     //initializtion
     init();
@@ -54,8 +54,8 @@ SoundRect::SoundRect(){
     float xBorder = 100.0;
     float yBorder = 50.0;
     //translation coordinates
-    rX = xBorder + ((float)rand()/RAND_MAX) * (screenWidth - xBorder * 2.0);
-    rY = yBorder + ((float)rand()/RAND_MAX) * (screenHeight - yBorder * 2.0);
+    rX = xBorder + ((float)rand()/RAND_MAX) * (_winWidth - xBorder * 2.0);
+    rY = yBorder + ((float)rand()/RAND_MAX) * (_winHeight - yBorder * 2.0);
     
     //min w and h dim
     minDim = 60.0f;
@@ -64,7 +64,7 @@ SoundRect::SoundRect(){
     float scaleF = 0.5;
     
     //box corners
-    setWidthHeight(minDim + scaleF*((float)rand()/RAND_MAX)*screenWidth, minDim + scaleF*((float)rand()/RAND_MAX)*screenHeight);  
+    setWidthHeight(minDim + scaleF*((float)rand()/RAND_MAX)*_winWidth, minDim + scaleF*((float)rand()/RAND_MAX)*_winHeight);  
     
     //set orientation
     if (randf() < 0.5)
@@ -81,6 +81,33 @@ SoundRect::SoundRect(){
     randColor();
 }
 
+void
+SoundRect::updateWinWidthHeight(unsigned int newWinWidth,
+                                unsigned int newWinHeight)
+{
+    if ((_winWidth == newWinWidth) && 
+        (_winHeight == newWinHeight))
+        return;
+
+    // update the rect pos and size if window size changed
+    float wRatio = ((float)newWinWidth)/_winWidth;
+    float hRatio = ((float)newWinHeight)/_winHeight;
+
+    rWidth *= wRatio;
+    rHeight *= hRatio;
+
+    rtop *= hRatio;
+    rbot *= hRatio;
+    rleft *= wRatio;
+    rright *= wRatio;
+
+    rX *= wRatio;
+    rY *= hRatio;
+    
+    // finally, update the window size
+    _winWidth = newWinWidth;
+    _winHeight = newWinHeight;
+}
 
 //other intialization code
 void SoundRect::init(){
@@ -198,11 +225,11 @@ void SoundRect::setWidthHeight(float width, float height){
     }
 
     
-    /*if ((width > 50.0f) && (width < (8.0f*screenWidth))){
+    /*if ((width > 50.0f) && (width < (8.0f*_winWidth))){
         rWidth = width;
         newSet = true;
     }
-    if ( (height > 50.0f) && (width < (8.0f*screenHeight))){
+    if ( (height > 50.0f) && (width < (8.0f*_winHeight))){
         rHeight = height;
         newSet = true;
     }
@@ -244,9 +271,9 @@ void SoundRect::updateCorners(float width, float height){
 void SoundRect::setUps(){
     float sizeFactor = 10.0f;
     if (orientation == true)
-        ups = (float) screenWidth/rWidth;
+        ups = (float) _winWidth/rWidth;
     else
-        ups = (float) screenHeight/rHeight;
+        ups = (float) _winHeight/rHeight;
     
     if (ups < 1)
         ups = 1;
@@ -523,7 +550,3 @@ bool SoundRect::getNormedPosition(double * positionsX, double * positionsY, floa
 void SoundRect::setName( char * name)
 {
 }
-
-
-
-

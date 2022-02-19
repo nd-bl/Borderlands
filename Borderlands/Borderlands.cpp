@@ -64,7 +64,8 @@
 
 using namespace std;
 
-unsigned int screenWidth, screenHeight;
+unsigned int _screenWidth, _screenHeight;
+unsigned int _winWidth, _winHeight;
 
 
 //-----------------------------------------------------------------------------
@@ -214,6 +215,22 @@ void cleaningFunction(){
 
 
 
+void updateWindowDimensions(int newWinWidth, int newWinHeight)
+{
+    // rects
+    if (soundViews)
+    {
+        for (int i = 0; i < soundViews->size(); i++)
+            (*soundViews)[i]->updateWinWidthHeight(newWinWidth,newWinHeight);
+    }
+    
+    // grains
+    if (grainCloudVis)
+    {
+        for (int i = 0; i < grainCloudVis->size(); i++)
+            (*grainCloudVis)[i]->updateWinWidthHeight(newWinWidth,newWinHeight);
+    }
+}
 
 //================================================================================
 //   Audio Callback
@@ -267,8 +284,14 @@ void toggleFullScreen(){
     if (isFullScreen)
     {
 
-        glutReshapeWindow(0.6*screenWidth,0.6*screenHeight);
-        glutPositionWindow(screenWidth*0.1,100);
+        _winWidth = 0.6*_screenWidth;
+        _winHeight = 0.6*_screenHeight;
+        glutReshapeWindow(_winWidth,_winHeight);
+
+        int centerXCorner = _screenWidth/2 - _winWidth/2;
+        int centerYCorner = _screenHeight/2 - _winHeight/2;
+        glutPositionWindow(centerXCorner,centerYCorner);
+        
         isFullScreen = false;
         /*
         glutLeaveGameMode();
@@ -284,13 +307,13 @@ void toggleFullScreen(){
         //glutFullScreen();
         string res;
         char buffer[33];
-        screenWidth = glutGet(GLUT_SCREEN_WIDTH);
-        sprintf(buffer, "%d", screenWidth);
+        _screenWidth = glutGet(GLUT_SCREEN_WIDTH);
+        sprintf(buffer, "%d", _screenWidth);
         res.append(buffer);
         res.append("x");
         char buffer2[33];
-        screenHeight = glutGet(GLUT_SCREEN_HEIGHT);
-        sprintf(buffer2,"%d",screenHeight);
+        _screenHeight = glutGet(GLUT_SCREEN_HEIGHT);
+        sprintf(buffer2,"%d",_screenHeight);
         res.append(buffer2);
         res.append(":32@75");
         cout << res.c_str() << endl;
@@ -326,9 +349,12 @@ void initialize()
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH );
     
     
-    screenWidth = glutGet(GLUT_SCREEN_WIDTH);
-    screenHeight = glutGet(GLUT_SCREEN_HEIGHT);
-    glutInitWindowSize (screenWidth,screenHeight);
+    _screenWidth = glutGet(GLUT_SCREEN_WIDTH);
+    _screenHeight = glutGet(GLUT_SCREEN_HEIGHT);
+
+    _winWidth = _screenWidth;
+    _winHeight = _screenHeight;
+    glutInitWindowSize (_winWidth,_winHeight);
     glutInitWindowPosition (0, 0);
     glutCreateWindow("Borderlands");
     
@@ -337,13 +363,13 @@ void initialize()
     //Game Mode   
     string res;
     char buffer[33];
-    screenWidth = glutGet(GLUT_SCREEN_WIDTH);
-    sprintf(buffer, "%d", screenWidth);
+    _screenWidth = glutGet(GLUT_SCREEN_WIDTH);
+    sprintf(buffer, "%d", _screenWidth);
     res.append(buffer);
     res.append("x");
     char buffer2[33];
-    screenHeight = glutGet(GLUT_SCREEN_HEIGHT);
-    sprintf(buffer2,"%d",screenHeight);
+    _screenHeight = glutGet(GLUT_SCREEN_HEIGHT);
+    sprintf(buffer2,"%d",_screenHeight);
     res.append(buffer2);
     res.append(":32@75");
     cout << res.c_str() << endl;
@@ -463,11 +489,15 @@ void displayFunc()
 void reshape(int w, int h)
 {
     glViewport(0, 0, (GLsizei) w, (GLsizei) h);
-    screenWidth = w;
-    screenHeight = h;
+    _winWidth = w;
+    _winHeight = h;
+
+    updateWindowDimensions(_winWidth, _winHeight);
+        
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    glOrtho(0.0, (GLdouble) screenWidth, 0.0, (GLdouble)screenHeight, -10.0, 10.0);
+    //glOrtho(0.0, (GLdouble) _screenWidth, 0.0, (GLdouble)_screenHeight, -10.0, 10.0);
+    glOrtho(0.0, (GLdouble) _winWidth, 0.0, (GLdouble)_winHeight, -10.0, 10.0);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     glTranslatef(-position.x,-position.y,-position.z); //translate the screen to the position of our camera
@@ -501,12 +531,12 @@ void drawAxis()
     //x axis
     glColor4f(1,0,0,0.9);
     glVertex3f(0,0,0);
-    glVertex3f(screenWidth,0,0);
+    glVertex3f(_winWidth,0,0);
     
     //x axis
     glColor4f(0,1,0,0.9);
     glVertex3f(0,0,0);
-    glVertex3f(0,screenHeight,0);
+    glVertex3f(0,_winHeight,0);
     
     //z axis
     glColor4f(0,0,1,0.7);
@@ -530,7 +560,7 @@ void draw_string( GLfloat x, GLfloat y, GLfloat z, const char * str, GLfloat sca
     GLint len = strlen( str ), i;
     
     glPushMatrix();
-    glTranslatef( x, screenHeight-y, z );
+    glTranslatef( x, _winHeight-y, z );
     glScalef( .001f * scale, .001f * scale, .001f * scale );
     
     for( i = 0; i < len; i++ )
@@ -549,19 +579,19 @@ void printUsage(){
     glLineWidth(2.0f);
     float theA = 0.6f + 0.2*sin(0.8*PI*GTime::instance().sec);
     glColor4f(theA,theA,theA,theA);
-    draw_string(screenWidth/2.0f + 0.2f*(float)screenWidth,(float)screenHeight/2.0f, 0.5f,"BORDERLANDS",(float)screenWidth*0.1f);
+    draw_string(_winWidth/2.0f + 0.2f*(float)_winWidth,(float)_winHeight/2.0f, 0.5f,"BORDERLANDS",(float)_winWidth*0.1f);
    
     theA = 0.6f + 0.2*sin(0.9*PI*GTime::instance().sec);
     float insColor = theA*0.4f;
     glColor4f(insColor,insColor,insColor,theA);
     //key info
-    draw_string(screenWidth/2.0f + 0.2f*(float)screenWidth + 10.0,(float)screenHeight/2.0f + 30.0, 0.5f,"CLICK TO START",(float)screenWidth*0.04f);
+    draw_string(_winWidth/2.0f + 0.2f*(float)_winWidth + 10.0,(float)_winHeight/2.0f + 30.0, 0.5f,"CLICK TO START",(float)_winWidth*0.04f);
 
     theA = 0.6f + 0.2*sin(1.0*PI*GTime::instance().sec);
     insColor = theA*0.4f;
     glColor4f(insColor,insColor,insColor,theA);
     //key info
-    draw_string(screenWidth/2.0f + 0.2f*(float)screenWidth+10.0,(float)screenHeight/2.0f + 50.0, 0.5f,"ESCAPE TO QUIT",(float)screenWidth*0.04f);
+    draw_string(_winWidth/2.0f + 0.2f*(float)_winWidth+10.0,(float)_winHeight/2.0f + 50.0, 0.5f,"ESCAPE TO QUIT",(float)_winWidth*0.04f);
     
 }
 
@@ -620,14 +650,14 @@ void printManual(){
         };
             
 
-    //float x = screenWidth/2.0f - 0.2f*(float)screenWidth;
-    //float y = (float)screenHeight/2.0f - 0.2*(float)screenHeight;
-    float x = (float)screenWidth*0.1;
-    float y = (float)screenHeight*0.1;
+    //float x = _winWidth/2.0f - 0.2f*(float)_winWidth;
+    //float y = (float)_winHeight/2.0f - 0.2*(float)_winHeight;
+    float x = (float)_winWidth*0.1;
+    float y = (float)_winHeight*0.1;
     
-    float yStep = (float)screenWidth*0.01f;
-    //float size = (float)screenWidth*0.04f;
-    float size = (float)screenWidth*0.06f;
+    float yStep = (float)_winWidth*0.01f;
+    //float size = (float)_winWidth*0.04f;
+    float size = (float)_winWidth*0.06f;
     
     for (int i = 0; i < sizeof(commands)/sizeof(char *); i++)
     {
@@ -654,7 +684,7 @@ void printParam(){
                 myValue = "Voices: ";
                 sinput << theCloud->getNumVoices();            
                 myValue = myValue+ sinput.str();
-                draw_string((GLfloat)mouseX,(GLfloat) (screenHeight-mouseY),0.0,myValue.c_str(),100.0f);
+                draw_string((GLfloat)mouseX,(GLfloat) (_winHeight-mouseY),0.0,myValue.c_str(),100.0f);
                 break;
             case DURATION:
                 myValue = "Duration: ";
@@ -664,7 +694,7 @@ void printParam(){
                 }else{
                     myValue = myValue + paramString + " ms";
                 }
-                draw_string((GLfloat)mouseX,(GLfloat) (screenHeight-mouseY),0.0,myValue.c_str(),100.0f);
+                draw_string((GLfloat)mouseX,(GLfloat) (_winHeight-mouseY),0.0,myValue.c_str(),100.0f);
                 //            myValue = "Duration (ms): " + theCloud->getDurationMs();
                 break;
             case WINDOW:
@@ -692,19 +722,19 @@ void printParam(){
                         break;
                 }
                 
-                draw_string((GLfloat)mouseX,(GLfloat) (screenHeight-mouseY),0.0,myValue.c_str(),100.0f);
+                draw_string((GLfloat)mouseX,(GLfloat) (_winHeight-mouseY),0.0,myValue.c_str(),100.0f);
                 break;
             case MOTIONX:
                 myValue = "X: ";
                 sinput << theCloudVis->getXRandExtent();
                 myValue = myValue + sinput.str();
-                draw_string((GLfloat)mouseX,(GLfloat) (screenHeight-mouseY),0.0,myValue.c_str(),100.0f);
+                draw_string((GLfloat)mouseX,(GLfloat) (_winHeight-mouseY),0.0,myValue.c_str(),100.0f);
                 break;
             case MOTIONY:
                 myValue = "Y: ";
                 sinput << theCloudVis->getYRandExtent();
                 myValue = myValue + sinput.str();
-                draw_string((GLfloat)mouseX,(GLfloat) (screenHeight-mouseY),0.0,myValue.c_str(),100.0f);
+                draw_string((GLfloat)mouseX,(GLfloat) (_winHeight-mouseY),0.0,myValue.c_str(),100.0f);
                 break;
             case MOTIONXY:
                 myValue = "X,Y: ";
@@ -712,7 +742,7 @@ void printParam(){
                 myValue = myValue + sinput.str() + ", ";
                 sinput2 << theCloudVis->getYRandExtent();
                 myValue = myValue + sinput2.str();
-                draw_string((GLfloat)mouseX,(GLfloat) (screenHeight-mouseY),0.0,myValue.c_str(),100.0f);
+                draw_string((GLfloat)mouseX,(GLfloat) (_winHeight-mouseY),0.0,myValue.c_str(),100.0f);
                 break;
                 
             case DIRECTION:
@@ -730,7 +760,7 @@ void printParam(){
                         myValue = "";
                         break;
                 }
-                draw_string((GLfloat)mouseX,(GLfloat) (screenHeight-mouseY),0.0,myValue.c_str(),100.0f);  
+                draw_string((GLfloat)mouseX,(GLfloat) (_winHeight-mouseY),0.0,myValue.c_str(),100.0f);  
                 break;
                 
             case SPATIALIZE:
@@ -748,7 +778,7 @@ void printParam(){
                         myValue = "";
                         break;
                 }
-                draw_string((GLfloat)mouseX,(GLfloat) (screenHeight-mouseY),0.0,myValue.c_str(),100.0f);  
+                draw_string((GLfloat)mouseX,(GLfloat) (_winHeight-mouseY),0.0,myValue.c_str(),100.0f);  
                 break;
             case VOLUME:
                 myValue = "Volume (dB): ";
@@ -758,7 +788,7 @@ void printParam(){
                 }else{
                     myValue = myValue + paramString;
                 }
-                draw_string((GLfloat)mouseX,(GLfloat) (screenHeight-mouseY),0.0,myValue.c_str(),100.0f);
+                draw_string((GLfloat)mouseX,(GLfloat) (_winHeight-mouseY),0.0,myValue.c_str(),100.0f);
                 break;
             case OVERLAP:
                 myValue = "Overlap: ";
@@ -768,7 +798,7 @@ void printParam(){
                 }else{
                     myValue = myValue + paramString;
                 }
-                draw_string((GLfloat)mouseX,(GLfloat) (screenHeight-mouseY),0.0,myValue.c_str(),100.0f);
+                draw_string((GLfloat)mouseX,(GLfloat) (_winHeight-mouseY),0.0,myValue.c_str(),100.0f);
                 //            myValue = "Duration (ms): " + theCloud->getDurationMs();
                 break;
             case PITCH:
@@ -779,7 +809,7 @@ void printParam(){
                 }else{
                     myValue = myValue + paramString;
                 }
-                draw_string((GLfloat)mouseX,(GLfloat) (screenHeight-mouseY),0.0,myValue.c_str(),100.0f);
+                draw_string((GLfloat)mouseX,(GLfloat) (_winHeight-mouseY),0.0,myValue.c_str(),100.0f);
                 //            myValue = "Duration (ms): " + theCloud->getDurationMs();
                 break;
                 
@@ -791,7 +821,7 @@ void printParam(){
                 }else{
                     myValue = myValue + paramString;
                 }
-                draw_string((GLfloat)mouseX,(GLfloat) (screenHeight-mouseY),0.0,myValue.c_str(),100.0f);
+                draw_string((GLfloat)mouseX,(GLfloat) (_winHeight-mouseY),0.0,myValue.c_str(),100.0f);
                 //            myValue = "Duration (ms): " + theCloud->getDurationMs();
                 break;
             case P_LFO_AMT:
@@ -802,7 +832,7 @@ void printParam(){
                 }else{
                     myValue = myValue + paramString;
                 }
-                draw_string((GLfloat)mouseX,(GLfloat) (screenHeight-mouseY),0.0,myValue.c_str(),100.0f);
+                draw_string((GLfloat)mouseX,(GLfloat) (_winHeight-mouseY),0.0,myValue.c_str(),100.0f);
                 //            myValue = "Duration (ms): " + theCloud->getDurationMs();
                 break;
             default:
@@ -821,7 +851,7 @@ void printParam(){
 //update mouse coords based on mousemovement
 void updateMouseCoords(int x, int y){
     mouseX = x+position.x;
-    mouseY = (screenHeight - (y-position.y) );
+    mouseY = (_winHeight - (y-position.y) );
 }
 
 
@@ -1216,7 +1246,9 @@ void keyboardFunc( unsigned char key, int x, int y )
                     //create audio
                     grainCloud->push_back(new GrainCluster(mySounds,numVoices));
                     //create visualization
-                    grainCloudVis->push_back(new GrainClusterVis(mouseX,mouseY,numVoices,soundViews));
+                    grainCloudVis->
+                        push_back(new GrainClusterVis(_winWidth, _winHeight,
+                                                      mouseX,mouseY,numVoices,soundViews));
                     //select new cloud
                     grainCloudVis->at(idx)->setSelectState(true);
                     //register visualization with audio
@@ -1597,7 +1629,7 @@ void mousePassiveMotion(int x, int y)
     //            case NUMGRAINS:
     //                break;
     //            case DURATION:
-    //                grainCloud->at(selectedCloud)->setDurationMs((mouseY/screenHeight)*4000.0f);
+    //                grainCloud->at(selectedCloud)->setDurationMs((mouseY/_winHeight)*4000.0f);
     //            
     //            default:
     //                break;
@@ -1651,7 +1683,7 @@ int main (int argc, char ** argv)
     soundViews = new vector<SoundRect *>;
     for (int i = 0; i < mySounds->size(); i++)
     {
-        soundViews->push_back(new SoundRect());
+        soundViews->push_back(new SoundRect(_winWidth,_winHeight));
         soundViews->at(i)->associateSound(mySounds->at(i)->wave,mySounds->at(i)->frames,mySounds->at(i)->channels);
     }
     

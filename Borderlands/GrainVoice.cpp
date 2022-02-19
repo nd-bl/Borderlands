@@ -542,18 +542,23 @@ GrainVis::~GrainVis(){
 
 
 //constructor
-GrainVis::GrainVis(float x, float y){
-    gX = x;
-    gY = y;
+GrainVis::GrainVis(unsigned int winWidth, unsigned int winHeight,
+                   float x, float y)
+{
+    _winWidth = winWidth;
+    _winHeight = winHeight;
+    
+    _gX = x;
+    _gY = y;
     colR = 1.0;
     colB = 1.0;
     colG = 1.0;
     colA = 0.6;
     defG = colG;
     defB = colB;
-    defSize = 10.0f;
-    mySize = defSize;
-    onSize = 30.0f;
+    _defSize = 10.0f;
+    _mySize = _defSize;
+    _onSize = 30.0f;
     isOn = false;
     firstTrigger = false;
     startTime = GTime::instance().sec;
@@ -562,6 +567,31 @@ GrainVis::GrainVis(float x, float y){
     
 }
 
+void
+GrainVis::updateWinWidthHeight(unsigned int newWinWidth,
+                               unsigned int newWinHeight)
+{
+    if ((_winWidth == newWinWidth) && 
+        (_winHeight == newWinHeight))
+        return;
+
+    // update the rect pos and size if window size changed
+    float wRatio = ((float)newWinWidth)/_winWidth;
+    float hRatio = ((float)newWinHeight)/_winHeight;
+
+    float sizeRatio = sqrt(newWinWidth*newWinWidth + newWinHeight*newWinHeight)/
+        sqrt(_winWidth*_winWidth + _winHeight*_winHeight);
+    
+    _gX *= wRatio;
+    _gY *= hRatio;
+
+    _mySize *= sizeRatio;
+    _defSize *= sizeRatio;
+    _onSize *= sizeRatio;
+    
+    _winWidth = newWinWidth;
+    _winHeight = newWinHeight;
+}
 
 //draw method
 void GrainVis::draw()
@@ -574,14 +604,14 @@ void GrainVis::draw()
             mult = exp(-t_sec/(0.8*durSec)); 
             colG = mult*colG;
             colB = mult*colB;
-            mySize = defSize + (1.0 - mult)*(onSize-defSize);
+            _mySize = _defSize + (1.0 - mult)*(_onSize-_defSize);
             if (colB < 0.001)
                 isOn = false;
         }else{
             mult = 1.0-exp(-t_sec/(0.2*durSec));
             colG = mult*defG;
             colB = mult*defB;
-            mySize = defSize + (1.0 - mult)*(onSize-defSize);
+            _mySize = _defSize + (1.0 - mult)*(_onSize-_defSize);
             
         }
     }
@@ -599,9 +629,9 @@ void GrainVis::draw()
     //point version (preferred - better quality)
     float prevSize = 1.0f;
     glGetFloatv(GL_POINT_SIZE,&prevSize);
-    glPointSize(mySize);
+    glPointSize(_mySize);
     glBegin(GL_POINTS);
-    glVertex3f(gX,gY,0.0);
+    glVertex3f(_gX,_gY,0.0);
     glEnd();
     glPointSize(prevSize);
     //    //end point version
@@ -619,15 +649,15 @@ void GrainVis::trigger(float theDur){
 
 //move to
 void GrainVis::moveTo(float x, float y){
-    gX = x;
-    gY = y;
+    _gX = x;
+    _gY = y;
 }
 
 float GrainVis::getX(){
-    return gX;
+    return _gX;
 }
 float GrainVis::getY(){
-    return gY;
+    return _gY;
 }
 
 

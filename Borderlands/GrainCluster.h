@@ -197,8 +197,13 @@ public:
     ~GrainClusterVis();
     
     //constructor (takes center position (x,y), number of voices, sound rectangles)
-    GrainClusterVis(float x, float y, unsigned int numVoices,vector<SoundRect*>*rects);
-    
+    GrainClusterVis(unsigned int winWidth, unsigned int winHeight,
+                    float x, float y,
+                    unsigned int numVoices,vector<SoundRect*>*rects);
+
+    void updateWinWidthHeight(unsigned int newWinWidth,
+                              unsigned int newWinHeight);
+        
     //render
     void draw();
     //get playback position in registered rectangles and return to grain cloud
@@ -235,13 +240,13 @@ private:
     bool isOn,isSelected;
     bool addFlag,removeFlag;
     double startTime;
-    unsigned int screenWidth,screenHeight;
+    unsigned int _winWidth,_winHeight;
     
-    float xRandExtent, yRandExtent;
+    float _xRandExtent, _yRandExtent;
     
     float freq;
     float gcX, gcY;
-    float selRad, lambda, maxSelRad, minSelRad,targetRad;
+    float selRad, lambda, _maxSelRad, _minSelRad,targetRad;
     unsigned int numGrains;
     
     //grain voice visualizations

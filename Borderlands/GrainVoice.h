@@ -160,7 +160,12 @@ public:
     //destructor
     ~GrainVis();
     //constructor
-    GrainVis(float x, float y);
+    GrainVis(unsigned int winWidth, unsigned int winHeight,
+             float x, float y);
+
+    void updateWinWidthHeight(unsigned int newWinWidth,
+                              unsigned int newWinHeight);
+        
     void draw();
     //position update function
     void moveTo(float x, float y);
@@ -171,12 +176,13 @@ private:
     bool isOn,firstTrigger;
     double startTime;
     double triggerTime;
-    float gX,gY;
+    float _gX,_gY;
     float colR,colG,colB,colA;
     float defG, defB;
-    float mySize,defSize,onSize;//GL point size
+    float _mySize,_defSize,_onSize;//GL point size
     float durSec;
-    
+
+    unsigned int _winWidth,_winHeight;
 };
 
 
