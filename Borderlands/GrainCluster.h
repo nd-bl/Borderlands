@@ -220,8 +220,8 @@ public:
                     unsigned int numVoices,
                     vector<SoundRect*>*rects);
 
-    void updateWinWidthHeight(unsigned int newWinWidth,
-                              unsigned int newWinHeight);
+    void updateWinDimensions(unsigned int newWinWidth,
+                             unsigned int newWinHeight);
         
     // render
     void draw();

@@ -273,14 +273,14 @@ updateWindowDimensions(int newWinWidth, int newWinHeight)
     if (_soundViews)
     {
         for (int i = 0; i < _soundViews->size(); i++)
-            (*_soundViews)[i]->updateWinWidthHeight(newWinWidth,newWinHeight);
+            (*_soundViews)[i]->updateWinDimensions(newWinWidth,newWinHeight);
     }
     
     // grains
     if (_grainCloudVis)
     {
         for (int i = 0; i < _grainCloudVis->size(); i++)
-            (*_grainCloudVis)[i]->updateWinWidthHeight(newWinWidth,newWinHeight);
+            (*_grainCloudVis)[i]->updateWinDimensions(newWinWidth,newWinHeight);
     }
 }
 
@@ -1942,7 +1942,7 @@ mouseDrag(int x, int y)
                         
                         // update width and height
                         _soundViews->at(_selectedRect)->
-                            setWidthHeight(newWidth,newHeight);
+                            setDimensions(newWidth,newHeight);
                     }
                 }   
                 _lastDragX = x;

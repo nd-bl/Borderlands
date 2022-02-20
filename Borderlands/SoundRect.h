@@ -62,8 +62,8 @@ public:
               unsigned int winWidth, unsigned int winHeight);
 
     // when win size changes
-    void updateWinWidthHeight(unsigned int newWinWidth,
-                              unsigned int newWinHeight);
+    void updateWinDimensions(unsigned int newWinWidth,
+                             unsigned int newWinHeight);
     
     // other object initialization code
     void init();
@@ -72,7 +72,7 @@ public:
     void draw();
     
     // properties
-    void setWidthHeight(float width, float height);
+    void setDimensions(float width, float height);
 
     float getHeight();
     float getWidth();

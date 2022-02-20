@@ -590,8 +590,8 @@ GrainVis::GrainVis(Style *style,
 }
 
 void
-GrainVis::updateWinWidthHeight(unsigned int newWinWidth,
-                               unsigned int newWinHeight)
+GrainVis::updateWinDimensions(unsigned int newWinWidth,
+                              unsigned int newWinHeight)
 {
     if ((_winWidth == newWinWidth) && 
         (_winHeight == newWinHeight))

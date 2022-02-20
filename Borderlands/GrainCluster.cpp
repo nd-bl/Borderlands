@@ -704,8 +704,8 @@ GrainClusterVis::GrainClusterVis(Style *style,
 }
 
 void
-GrainClusterVis::updateWinWidthHeight(unsigned int newWinWidth,
-                                      unsigned int newWinHeight)
+GrainClusterVis::updateWinDimensions(unsigned int newWinWidth,
+                                     unsigned int newWinHeight)
 {
     if ((_winWidth == newWinWidth) && 
         (_winHeight == newWinHeight))
@@ -731,7 +731,7 @@ GrainClusterVis::updateWinWidthHeight(unsigned int newWinWidth,
     _winHeight = newWinHeight;
 
     for (int i = 0; i < _grains->size(); i++)
-        (*_grains)[i]->updateWinWidthHeight(newWinWidth, newWinHeight);
+        (*_grains)[i]->updateWinDimensions(newWinWidth, newWinHeight);
 }
 
 void

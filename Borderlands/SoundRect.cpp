@@ -65,7 +65,7 @@ SoundRect::SoundRect(Style *style,
     float scaleF = 0.5;
     
     // box corners
-    setWidthHeight(_minDim + scaleF*((float)rand()/RAND_MAX)*_winWidth,
+    setDimensions(_minDim + scaleF*((float)rand()/RAND_MAX)*_winWidth,
                    _minDim + scaleF*((float)rand()/RAND_MAX)*_winHeight);  
     
     // set _orientation
@@ -82,7 +82,7 @@ SoundRect::SoundRect(Style *style,
 }
 
 void
-SoundRect::updateWinWidthHeight(unsigned int newWinWidth,
+SoundRect::updateWinDimensions(unsigned int newWinWidth,
                                 unsigned int newWinHeight)
 {
     if ((_winWidth == newWinWidth) && 
@@ -190,7 +190,7 @@ void
 SoundRect::toggleOrientation()
 {
     _orientation = !_orientation;
-    setWidthHeight(_rHeight,_rWidth);
+    setDimensions(_rHeight,_rWidth);
 }
 
 // color randomizer + alpha (roughly green/blue in color)
@@ -228,7 +228,7 @@ SoundRect::randColor()
 
 // set width and height
 void
-SoundRect::setWidthHeight(float width, float height)
+SoundRect::setDimensions(float width, float height)
 {    
     bool newWidth = false;
     bool newHeight = false;
@@ -373,9 +373,9 @@ SoundRect::associateSound(double * buff,
     _buffFrames = buffFrames;
     _buffChans = buffChans;
     //    if (_orientation)
-    //        setWidthHeight((float)buffFrames/20000.f,_rHeight);
+    //        setDimensions((float)buffFrames/20000.f,_rHeight);
     //    else
-    //        setWidthHeight(_rWidth,(float)buffFrames/30000.f);
+    //        setDimensions(_rWidth,(float)buffFrames/30000.f);
     
     setWaveDisplayParams();
 }

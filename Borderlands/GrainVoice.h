@@ -169,8 +169,8 @@ public:
              unsigned int winHeight,
              float x, float y);
 
-    void updateWinWidthHeight(unsigned int newWinWidth,
-                              unsigned int newWinHeight);
+    void updateWinDimensions(unsigned int newWinWidth,
+                             unsigned int newWinHeight);
         
     void draw();
     
