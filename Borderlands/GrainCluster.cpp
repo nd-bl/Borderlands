@@ -700,17 +700,17 @@ void GrainClusterVis::draw()
     //Grain cluster representation
     if (isSelected)
     {
-        float grainColor[4];
-        _style->getGrainColor(grainColor);
-        glColor4f(grainColor[0], grainColor[1],
-                  grainColor[2], grainColor[3]);
-    }
-    else
-    {
         float grainColorSelected[4];
         _style->getGrainColorSelected(grainColorSelected);
         glColor4f(grainColorSelected[0], grainColorSelected[1],
                   grainColorSelected[2], grainColorSelected[3]);
+    }
+    else
+    {
+        float grainColor[4];
+        _style->getGrainColor(grainColor);
+        glColor4f(grainColor[0], grainColor[1],
+                  grainColor[2], grainColor[3]);
     }
     
     selRad = _minSelRad + 0.5*(_maxSelRad-_minSelRad)*sin(2*PI*(freq*t_sec + 0.125));
