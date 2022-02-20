@@ -745,7 +745,11 @@ printManual()
             "F key            Switch grain direction (FORWARD, BACKWARD, RANDOM)",
             "R key            Enable mouse control of XY extent of grain position randomness",
             "X key            Enable mouse control of X extent of grain position randomness",
-            "Y key            Enable mouse control of Y extent of grain position randomness"
+            "Y key            Enable mouse control of Y extent of grain position randomness",
+            "T key            Switch spatialization modes",
+            "L key (+ shift)  Adjust playback rate LFO frequency",
+            "K key (+ shift)  Adjust playback rate LFO amplitude",
+            "B key (+ shift)  Adjust cloud volume in dB"
         };
             
     float x = (float)_winWidth*0.1;
@@ -1307,8 +1311,7 @@ keyboardFunc(unsigned char key, int x, int y)
                             int spat = _grainCloud->at(_selectedCloud)->
                                 getSpatialMode();
                             _grainCloud->at(_selectedCloud)->
-                                setSpatialMode(spat - 1,-1);
-                            
+                                setSpatialMode(spat - 1,-1);       
                         }
                     }
                     else
