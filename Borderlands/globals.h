@@ -71,6 +71,9 @@ static const double globalAtten = 0.5;
 //#define LOCAL_PORT 10001
 //#define OUTPUT_BUFFER_SIZE 1024
 
+//#define FPS 25.0
+//#define FPS 60.0
+#define FPS -1.0 // for default
 
 ////-----------------------------------------------------------------------------
 //// Defines a point in a 2D space (coords x, y)

@@ -52,6 +52,11 @@
 #include <cstdlib>
 #include <sstream>
 
+#ifdef __linux__
+// for usleep
+#include <unistd.h>
+#endif
+
 //audio related
 #include "MyRtAudio.h"
 #include "AudioFileSet.h"
@@ -195,6 +200,8 @@ bool _negativeFlag = false;
 bool _audioBounce = false;
 FILE *_bounceFile = NULL;
 char _bounceFileName[255];
+
+int _fps = FPS;
 
 //--------------------------------------------------------------------------------
 // FUNCTION PROTOTYPES
@@ -620,6 +627,11 @@ reshape(int w, int h)
 void
 idleFunc()
 {
+#ifdef __linux__
+    if (_fps > 0.0)
+        usleep(1000000/_fps);
+#endif
+    
     // render the scene
     glutPostRedisplay();
 }
