@@ -358,7 +358,8 @@ void toggleFullScreen(){
 
 void initialize()
 {
-    _style = new DefaultStyle();
+    //_style = new DefaultStyle();
+    _style = new PurpleStyle();
     
     // initial window settings
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH );

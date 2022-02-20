@@ -618,7 +618,8 @@ void GrainVis::draw()
         //slew size
         double mult = 0.0;
         if (isOn == true){
-            mult = exp(-t_sec/(0.8*durSec)); 
+            mult = exp(-t_sec/(0.8*durSec));
+            colR = mult*colR;
             colG = mult*colG;
             colB = mult*colB;
             _mySize = _defSize + (1.0 - mult)*(_onSize-_defSize);

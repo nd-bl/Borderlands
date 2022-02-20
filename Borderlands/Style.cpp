@@ -147,7 +147,7 @@ Style::getWavePointSize()
     return _wavePointSize;
 }
 
-//
+// default stype
 DefaultStyle::DefaultStyle()
 {
     _backgroundColor[0] = 0.15;
@@ -240,3 +240,97 @@ DefaultStyle::DefaultStyle()
 }
 
 DefaultStyle::~DefaultStyle() {}
+
+// purple stype
+PurpleStyle::PurpleStyle()
+{
+    _backgroundColor[0] = 0.23;
+    _backgroundColor[1] = 0.20;
+    _backgroundColor[2] = 0.46;
+    _backgroundColor[3] = 1.0;
+
+    _axisLineWidth = 0.9;
+    
+    _axisXColor[0] = 1.0;
+    _axisXColor[1] = 0.0;
+    _axisXColor[2] = 0.0;
+    _axisXColor[3] = 0.9;
+
+    _axisYColor[0] = 0.0;
+    _axisYColor[1] = 1.0;
+    _axisYColor[2] = 0.0;
+    _axisYColor[3] = 0.9;
+
+    _axisZColor[0] = 0.0;
+    _axisZColor[1] = 0.0;
+    _axisZColor[2] = 1.0;
+    _axisZColor[3] = 0.7;
+
+    _usageLineWidth = 2.0;
+    
+    _usageAColCoeff[0] = 0.98;
+    _usageAColCoeff[1] = 0.63;
+    _usageAColCoeff[2] = 0.93;
+    _usageAColCoeff[3] = 1.0;
+
+    _usageInsColCoeff[0] = 0.98;
+    _usageInsColCoeff[1] = 0.63;
+    _usageInsColCoeff[2] = 0.92;
+    _usageInsColCoeff[3] = 1.0;
+
+    _manualLineWidth = 2.0;
+    
+    _manualInsColor[0] = 0.71;
+    _manualInsColor[1] = 0.20;
+    _manualInsColor[2] = 0.59;
+    _manualInsColor[3] = 0.6;
+
+    _paramColor[0] = 0.98;
+    _paramColor[1] = 0.63;
+    _paramColor[2] = 0.92;
+    _paramColor[3] = 1.0;
+
+    _grainColor[0] = 0.72;
+    _grainColor[1] = 0.70;
+    _grainColor[2] = 0.38;
+    _grainColor[3] = 0.35;
+
+    _grainColorSelected[0] = 0.39,
+    _grainColorSelected[1] = 0.18;
+    _grainColorSelected[2] = 0.28;
+    _grainColorSelected[3] = 0.3;
+
+    _grainVisColor[0] = 1.0;
+    _grainVisColor[1] = 1.0;
+    _grainVisColor[2] = 1.0;
+    _grainVisColor[3] = 0.6;
+
+    _grainVisDefColor[0] = 1.0;
+    _grainVisDefColor[1] = 1.0;
+    _grainVisDefColor[2] = 1.0;
+    _grainVisDefColor[3] = 1.0;
+        
+    _randSoundRectColor = false;
+    
+    _soundRectColorCoeff[0] = 1.0;
+    _soundRectColorCoeff[1] = 0.60;
+    _soundRectColorCoeff[2] = 1.0;
+    _soundRectColorCoeff[3] = 1.0;
+
+    _soundRectColorSelected[0] = 0.72;
+    _soundRectColorSelected[1] = 0.70;
+    _soundRectColorSelected[2] = 0.38;
+    _soundRectColorSelected[3] = 0.35;
+
+    _soundRectLineWidth = 2.0;
+
+    _waveColor[0] = 1.0;
+    _waveColor[1] = 1.0;
+    _waveColor[2] = 1.0;
+    _waveColor[3] = 1.0;
+
+    _waveLineWidth = 0.3;
+    _wavePointSize = 1.0;
+}
+
+PurpleStyle::~PurpleStyle() {}

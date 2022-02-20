@@ -80,4 +80,12 @@ public:
     virtual ~DefaultStyle();
 };
 
+// purple style
+class PurpleStyle : public Style
+{
+public:
+    PurpleStyle();
+    virtual ~PurpleStyle();
+};
+
 #endif
