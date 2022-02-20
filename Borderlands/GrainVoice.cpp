@@ -558,17 +558,17 @@ GrainVis::GrainVis(Style *style,
     
     float grainVisColor[4];
     _style->getGrainVisColor(grainVisColor);
-    colR = grainVisColor[0];
-    colG = grainVisColor[1];
-    colB = grainVisColor[2];
-    colA = grainVisColor[3];
+    _colR = grainVisColor[0];
+    _colG = grainVisColor[1];
+    _colB = grainVisColor[2];
+    _colA = grainVisColor[3];
 
     float grainVisDefColor[4];
     _style->getGrainVisDefColor(grainVisDefColor);
-    defR = grainVisDefColor[0];
-    defG = grainVisDefColor[1];
-    defB = grainVisDefColor[2];
-    defA = grainVisDefColor[3];
+    _defR = grainVisDefColor[0];
+    _defG = grainVisDefColor[1];
+    _defB = grainVisDefColor[2];
+    _defA = grainVisDefColor[3];
     
     //defG = colG;
     //defB = colB;
@@ -613,29 +613,38 @@ GrainVis::updateWinWidthHeight(unsigned int newWinWidth,
 //draw method
 void GrainVis::draw()
 {
+    float colR, colG, colB, colA;
+    
     double t_sec = GTime::instance().sec - triggerTime;
     if (firstTrigger == true){
         //slew size
         double mult = 0.0;
         if (isOn == true){
             mult = exp(-t_sec/(0.8*durSec));
-            colR = mult*colR;
-            colG = mult*colG;
-            colB = mult*colB;
+            
+            colR = mult*_colR;
+            colG = mult*_colG;
+            colB = mult*_colB;
+            colA = mult*_colA;
+            //colA = _colA;
             _mySize = _defSize + (1.0 - mult)*(_onSize-_defSize);
             if (colB < 0.001)
                 isOn = false;
         }else{
             mult = 1.0-exp(-t_sec/(0.2*durSec));
-            colR = mult*defR;
-            colG = mult*defG;
-            colB = mult*defB;
-            colA = mult*defA;
+            //mult = 0.5-exp(-t_sec/(0.2*durSec));
+            //if (mult < 0.0)
+            //    mult = 0.0;
+            
+            colR = mult*_defR;
+            colG = mult*_defG;
+            colB = mult*_defB;
+            colA = mult*_defA;
+            //colA = _colA;
             _mySize = _defSize + (1.0 - mult)*(_onSize-_defSize);
             
         }
     }
-    
     
     glColor4f(colR,colG,colB,colA);
     

@@ -181,9 +181,9 @@ private:
     double startTime;
     double triggerTime;
     float _gX,_gY;
-    float colR,colG,colB,colA;
+    float _colR,_colG,_colB,_colA;
     //float defG, defB;
-    float defR, defG, defB, defA;
+    float _defR, _defG, _defB, _defA;
     float _mySize,_defSize,_onSize;//GL point size
     float durSec;
 

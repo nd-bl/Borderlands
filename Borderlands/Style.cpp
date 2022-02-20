@@ -207,13 +207,13 @@ DefaultStyle::DefaultStyle()
     _grainColorSelected[3] = 0.3;
 
     _grainVisColor[0] = 1.0;
-    _grainVisColor[1] = 1.0;
-    _grainVisColor[2] = 1.0;
+    _grainVisColor[1] = 0.0; //1.0;
+    _grainVisColor[2] = 0.0; //1.0;
     _grainVisColor[3] = 0.6;
 
     _grainVisDefColor[0] = 1.0;
-    _grainVisDefColor[1] = 1.0;
-    _grainVisDefColor[2] = 1.0;
+    _grainVisDefColor[1] = 0.0; //1.0;
+    _grainVisDefColor[2] = 0.0; //1.0;
     _grainVisDefColor[3] = 1.0;
         
     _randSoundRectColor = false;
@@ -300,13 +300,13 @@ PurpleStyle::PurpleStyle()
     _grainColorSelected[2] = 0.28;
     _grainColorSelected[3] = 0.3;
 
-    _grainVisColor[0] = 1.0;
-    _grainVisColor[1] = 1.0;
+    _grainVisColor[0] = 0.81; //1.0;
+    _grainVisColor[1] = 0.0; //1.0;
     _grainVisColor[2] = 1.0;
-    _grainVisColor[3] = 0.6;
+    _grainVisColor[3] = 0.9; //0.6;
 
-    _grainVisDefColor[0] = 1.0;
-    _grainVisDefColor[1] = 1.0;
+    _grainVisDefColor[0] = 0.81; //1.0;
+    _grainVisDefColor[1] = 0.0; //1.0;
     _grainVisDefColor[2] = 1.0;
     _grainVisDefColor[3] = 1.0;
         
