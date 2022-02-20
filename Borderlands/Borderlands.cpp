@@ -218,6 +218,8 @@ void drawManual();
 void drawParam();
 void drawBounceFile();
 void drawAxis();
+void drawFps();
+
 int audioCallback(void *outputBuffer, void *inputBuffer,
                   unsigned int numFrames, double streamTime,
                   RtAudioStreamStatus status, void *userData);
@@ -576,6 +578,7 @@ displayFunc()
     }
     
     //drawUsage();
+    drawFps();
     
     // POP ---//restore state
     glPopMatrix();
@@ -662,6 +665,44 @@ drawAxis()
     
     // POP -- //restore state
     glPopMatrix();
+}
+
+void
+drawFps()
+{
+    static int frame = 0;
+    static int timebase = 0;
+    
+    frame++;
+	int time = glutGet(GLUT_ELAPSED_TIME);
+
+    static float fps = 0.0;
+    
+	if (time - timebase > 1000) {
+		fps = frame*1000.0/(time-timebase);
+	 	timebase = time;
+		frame = 0;
+    }
+    
+    // Draw
+    char fpsStr[255];
+    sprintf(fpsStr, "%d fps", (int)fps);
+
+    float a = 0.6f + 0.2*sin(0.8*PI*GTime::instance()._sec);
+        
+    float paramColor[4];
+    _style->getParamColor(paramColor);
+    glColor4f(paramColor[0], paramColor[1],
+              paramColor[2], a*paramColor[3]);
+    
+    glLineWidth(2.0f);
+    
+    const float scale = 0.06;
+    drawString(0.0 + (float)_winWidth*scale*0.25, // x
+               0.0 + (float)_winWidth*scale*0.25, // y
+               0.5f,
+               fpsStr,
+               (float)_winWidth*scale);
 }
 
 //-----------------------------------------------------------------------------
