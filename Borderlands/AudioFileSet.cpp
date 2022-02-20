@@ -30,34 +30,36 @@
 #include "AudioFileSet.h"
 
 //---------------------------------------------------------------------------
+// constructor
+//---------------------------------------------------------------------------
+AudioFileSet::AudioFileSet()
+{
+    // init fileset
+    _fileSet = new vector<AudioFile *>;
+}
+
+//---------------------------------------------------------------------------
 // Destructor
 //---------------------------------------------------------------------------
 AudioFileSet::~AudioFileSet()
 {
-    //delete each audio file object (and corresponding buffer, etc.)
-    if (fileSet != NULL){
-        for (int i = 0; i < fileSet->size(); i++)
+    // delete each audio file object (and corresponding buffer, etc.)
+    if (_fileSet != NULL)
+    {
+        for (int i = 0; i < _fileSet->size(); i++)
         {
-            delete fileSet->at(i);
+            delete _fileSet->at(i);
         }
     }
-    
-}
-
-//---------------------------------------------------------------------------
-// constructor
-//---------------------------------------------------------------------------
-AudioFileSet::AudioFileSet(){
-    //init fileset
-    fileSet = new vector<AudioFile *>;
 }
 
 //---------------------------------------------------------------------------
 // Access file set externally (note this is not thread safe)
 //---------------------------------------------------------------------------
-vector<AudioFile *> * AudioFileSet::getFileVector()
+vector<AudioFile *>
+*AudioFileSet::getFileVector()
 {
-    return this->fileSet;
+    return _fileSet;
 }
 
 
@@ -65,58 +67,59 @@ vector<AudioFile *> * AudioFileSet::getFileVector()
 //  Search path and load all audio files into memory.  Convert to mono (L) 
 //  if needed.
 //---------------------------------------------------------------------------
-int AudioFileSet::loadFileSet(string localPath)
+int
+AudioFileSet::loadFileSet(string localPath)
 {
-    //read through loop directory and attempt to load audio files into buffers
+    // read through loop directory and attempt to load audio files into buffers
     
-    //using dirent
+    // using dirent
     DIR *dir;
     struct dirent *ent;
     
-    //counter var for number of files loaded
+    // counter var for number of files loaded
     int fileCounter = 0;
     
-    //get directory
-    dir = opendir (localPath.c_str());
+    // get directory
+    dir = opendir(localPath.c_str());
     
-    //if directory exists - jump on in
-    if (dir != NULL) {
-        
-        /* print all the files and directories within directory */
-        while ((ent = readdir (dir)) != NULL) {
+    // if directory exists - jump on in
+    if (dir != NULL)
+    {    
+        // print all the files and directories within directory
+        while ((ent = readdir (dir)) != NULL)
+        {
+            // get filename
+            string fileName = ent->d_name;
             
-            //get filename
-            string theFileName = ent->d_name;
-            
-            //skip cd, top directory, other files
-            if ((theFileName == ".") || (theFileName == "..") || (theFileName == ".DS_Store")|| (theFileName == ".svn")){
+            // skip cd, top directory, other files
+            if ((fileName == ".") || (fileName == "..") ||
+                (fileName == ".DS_Store")|| (fileName == ".svn"))
+            {
                 continue;
             }
             
+            // construct path
+            string path = localPath + fileName;
             
-            //construct path
-            string myPath = localPath + theFileName;
-            
-            
-            // temp struct that will hold the details of the file being read (sample rate, num channels. etc.)
-            SF_INFO sfinfo ;
+            // temp struct that will hold the details of the file being read
+            // (sample rate, num channels. etc.)
+            SF_INFO sfinfo;
             
             // a pointer to the audio file to read
-            SNDFILE * infile;
-            
+            SNDFILE *infile;
             
             // open the file for reading and get the header info
-            if ( !(infile = sf_open(myPath.c_str(), SFM_READ, &sfinfo)) )
+            if (!(infile = sf_open(path.c_str(), SFM_READ, &sfinfo)))
             {
-                printf ("Not able to open input file %s.\n", theFileName.c_str()) ;
-                // Print the error message from libsndfile.
-                puts (sf_strerror (NULL)) ;
+                printf ("Not able to open input file %s.\n", fileName.c_str());
+                // print the error message from libsndfile.
+                puts(sf_strerror(NULL)) ;
                 // skip to next
                 continue;
             }
             
-            //show the current file path (comment this eventually)
-            printf ("Loading '%s'... \n", theFileName.c_str());
+            // show the current file path (comment this eventually)
+            printf("Loading '%s'... \n", fileName.c_str());
             
             // explore the file's info
             cout << "  Channels: " << sfinfo.channels << endl;
@@ -124,9 +127,11 @@ int AudioFileSet::loadFileSet(string localPath)
             cout << "  Sample Rate: " << sfinfo.samplerate << endl;
             cout << "  Format: " << sfinfo.format << endl;
             
-            //warn about sampling rate incompatibility
-            if (sfinfo.samplerate != MY_SRATE){
-                printf("\nWARNING: '%s' is sampled at a different rate from the current sample rate of %i\n",theFileName.c_str(),MY_SRATE);
+            // warn about sampling rate incompatibility
+            if (sfinfo.samplerate != SRATE)
+            {
+                printf("\nWARNING: '%s' is sampled at a different rate from \
+the current sample rate of %i\n",fileName.c_str(), SRATE);
             }
             
             //MONO CONVERSION SET ASIDE FOR NOW...  number of channels for each file is dealt with 
@@ -150,52 +155,61 @@ int AudioFileSet::loadFileSet(string localPath)
             //length corresponds to the number of frames * number of channels  (1 frame contains L, R pair or chans 1,2,3...)
             unsigned long fullSize = sfinfo.frames * sfinfo.channels;
             
-            fileSet->push_back(new AudioFile(theFileName,myPath,sfinfo.channels,sfinfo.frames,sfinfo.samplerate,new double[fullSize]));
+            _fileSet->push_back(new AudioFile(fileName,
+                                              path,
+                                              sfinfo.channels,
+                                              sfinfo.frames,
+                                              sfinfo.samplerate,
+                                              new double[fullSize]));
 
                                
-            //accumulate the samples
+            // accumulate the samples
             unsigned long counter = 0;
             bool empty = false;
-            do {
+            do
+            {
                 // read the samples as doubles
-                sf_count_t count = sf_read_double( infile, &stereoBuff[0], buffSize);
+                sf_count_t count =
+                    sf_read_double(infile, &stereoBuff[0], buffSize);
+                
                 // break if we reached the end of the file
                 // print the sample values to screen
                 for(int i = 0; i < buffSize; i++)
                 {
-                    if (counter < fullSize){
+                    if (counter < fullSize)
+                    {
                         //if ((i % sfinfo.channels) == 0){
-                        fileSet->at(fileCounter)->wave[counter] = stereoBuff[i]*globalAtten;
+                        _fileSet->at(fileCounter)->_wave[counter] =
+                            stereoBuff[i]*globalAtten;
                         counter++;
-                    }
-                    
+                    }     
                 }
-                if ( count == 0) 
+                
+                if (count == 0) 
                 {
                     empty = true;
                     continue;
                 }
                 
             } while(!empty);
+
             cout << counter << endl;
             //increment the file counter
             fileCounter++;
             
             // don't forget to close the file	
-            sf_close( infile );
+            sf_close(infile);
         }
         
         //close the directory that we've been navigating
-        closedir (dir);
-    } else {
+        closedir(dir);
+    }
+    else
+    {
         /* could not open directory */
-        perror ("");
+        perror("");
         return 1;
     }
+
+    return 0;
 }
-
-
-
-
-
-

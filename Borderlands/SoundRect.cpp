@@ -33,53 +33,51 @@
 #include "Style.h"
 #include "SoundRect.h"
 
-
-//destructor
 SoundRect::~SoundRect()
 {
-    myBuff = NULL;
+    _buff = NULL;
 }
 
-
-
-
-//constructor 
-SoundRect::SoundRect(Style *style, unsigned int winWidth, unsigned int winHeight){
+// constructor 
+SoundRect::SoundRect(Style *style,
+                     unsigned int winWidth,
+                     unsigned int winHeight)
+{
     _style = style;
     
     _winWidth = winWidth;
     _winHeight = winHeight;
     
-    //initializtion
+    // initializtion
     init();
     
     float xBorder = 100.0;
     float yBorder = 50.0;
-    //translation coordinates
-    rX = xBorder + ((float)rand()/RAND_MAX) * (_winWidth - xBorder * 2.0);
-    rY = yBorder + ((float)rand()/RAND_MAX) * (_winHeight - yBorder * 2.0);
     
-    //min w and h dim
-    minDim = 60.0f;
+    // translation coordinates
+    _rX = xBorder + ((float)rand()/RAND_MAX) * (_winWidth - xBorder * 2.0);
+    _rY = yBorder + ((float)rand()/RAND_MAX) * (_winHeight - yBorder * 2.0);
     
-    //scale factor for randomization
+    // min w and h dim
+    _minDim = 60.0f;
+    
+    // scale factor for randomization
     float scaleF = 0.5;
     
-    //box corners
-    setWidthHeight(minDim + scaleF*((float)rand()/RAND_MAX)*_winWidth, minDim + scaleF*((float)rand()/RAND_MAX)*_winHeight);  
+    // box corners
+    setWidthHeight(_minDim + scaleF*((float)rand()/RAND_MAX)*_winWidth,
+                   _minDim + scaleF*((float)rand()/RAND_MAX)*_winHeight);  
     
-    //set orientation
+    // set _orientation
     if (randf() < 0.5)
-        orientation = true; //sideways
+        _orientation = true; //sideways
     else 
-        orientation = false;
+        _orientation = false;
     
-    
-    
-    //waveform display upsampling
+    // waveform display upsampling
     setUps();
     
-    //set color of rect
+    // set color of rect
     randColor();
 }
 
@@ -95,166 +93,177 @@ SoundRect::updateWinWidthHeight(unsigned int newWinWidth,
     float wRatio = ((float)newWinWidth)/_winWidth;
     float hRatio = ((float)newWinHeight)/_winHeight;
 
-    rWidth *= wRatio;
-    rHeight *= hRatio;
+    _rWidth *= wRatio;
+    _rHeight *= hRatio;
 
-    rtop *= hRatio;
-    rbot *= hRatio;
-    rleft *= wRatio;
-    rright *= wRatio;
+    _rtop *= hRatio;
+    _rbot *= hRatio;
+    _rleft *= wRatio;
+    _rright *= wRatio;
 
-    rX *= wRatio;
-    rY *= hRatio;
+    _rX *= wRatio;
+    _rY *= hRatio;
     
     // finally, update the window size
     _winWidth = newWinWidth;
     _winHeight = newWinHeight;
 }
 
-//other intialization code
-void SoundRect::init(){
+// other intialization code
+void
+SoundRect::init()
+{    
+    // selection state
+    _isSelected = false;
+    _buffMult = (double) 1.0 / globalAtten;
     
-    //selection state
-    isSelected = false;
-    buffMult = (double) 1.0 / globalAtten;
-    //other params
-    showBuff = true;
-    pendingBuffState = true;
-    //alpha pulsation stuff
-    aMin = 0.2f;
-    aMax = 0.3f;
-    aPhase = 2.0f*PI*((float)rand()/RAND_MAX);
-    lambda = 0.001;
-    pRate = ((float)rand()/RAND_MAX)*0.001;
+    // other params
+    _showBuff = true;
+    _pendingBuffState = true;
+    
+    // alpha pulsation stuff
+    _aMin = 0.2f;
+    _aMax = 0.3f;
+    _aPhase = 2.0f*PI*((float)rand()/RAND_MAX);
+    _lambda = 0.001;
+    _pRate = ((float)rand()/RAND_MAX)*0.001;
     
     if (((float)rand()/RAND_MAX) > 0.5)
-        aTarg = aMin;
-    
+        _aTarg = _aMin;
     else
-        aTarg = aMax;
+        _aTarg = _aMax;
     
-    buffAlphaMax = 0.75f;
-    buffAlpha = buffAlphaMax;
-    myBuff = NULL;
-    myBuffFrames = 0;
-    myBuffChans = 0;
-    myBuffInc = 0;    
-    lastX = 0;
-    lastY = 0;
+    _buffAlphaMax = 0.75f;
+    _buffAlpha = _buffAlphaMax;
+    _buff = NULL;
+    _buffFrames = 0;
+    _buffChans = 0;
+    _buffInc = 0;
+    _lastX = 0;
+    _lastY = 0;
     
-    //get start time
-    startTime = GTime::instance().sec;
-    //set id
-    //myId = ++boxId;
-    
+    // get start time
+    _startTime = GTime::instance()._sec;
+
+    // set id
+    //_id = ++boxId;
 }
 
-
-//set selection (highlight)
-void SoundRect::setSelectState(bool state){
-    isSelected = state;
+// set selection (highlight)
+void
+SoundRect::setSelectState(bool state)
+{
+    _isSelected = state;
 }
-//determine if mouse click is in selection range
-bool SoundRect::select(float x, float y){
-    
-    //check selection
-    bool isInside = insideMe(x,y);
-    //cout << "x " << x << "  y " << y << endl;
-//    cout << "rleft " << rleft << "rright " << rright << "rtop " << rtop << "rbot " << rbot  << endl;
 
-    //if selected set selection position (center, top, right, bottom, left)
+// determine if mouse click is in selection range
+bool SoundRect::select(float x, float y)
+{    
+    // check selection
+    bool isInside = insideMe(x, y);
+    // cout << "x " << x << "  y " << y << endl;
+    //    cout << "_rleft " << _rleft << "_rright " << _rright <<
+    // "_rtop " << _rtop << "_rbot " << _rbot  << endl;
+
+    // if selected set selection position (center, top, right, bottom, left)
     
-    //return selection state
+    // return selection state
     return isInside;
 }
 
-//process mouse motion during selection
-void SoundRect::move(float xDiff, float yDiff){
-    rX = rX + xDiff;
-    rY = rY + yDiff;
-    updateCorners(rWidth,rHeight);
-}
-
-
-
-bool SoundRect::getOrientation(){
-    return orientation;
-}
-
-void SoundRect::toggleOrientation(){
-    orientation = !orientation;
-    setWidthHeight(rHeight,rWidth);
-}
-
-
-//color randomizer + alpha (roughly green/blue in color)
-void SoundRect::randColor()
+// process mouse motion during selection
+void
+SoundRect::move(float xDiff, float yDiff)
 {
-    //color
-    colR = 0.4 + ((float)rand()/RAND_MAX)*0.3;
+    _rX = _rX + xDiff;
+    _rY = _rY + yDiff;
+    updateCorners(_rWidth,_rHeight);
+}
+
+bool
+SoundRect::getOrientation()
+{
+    return _orientation;
+}
+
+void
+SoundRect::toggleOrientation()
+{
+    _orientation = !_orientation;
+    setWidthHeight(_rHeight,_rWidth);
+}
+
+// color randomizer + alpha (roughly green/blue in color)
+void
+SoundRect::randColor()
+{
+    // color
+    _colR = 0.4 + ((float)rand()/RAND_MAX)*0.3;
 
     float soundRectColorCoeff[4];
     _style->getSoundRectColorCoeff(soundRectColorCoeff);
         
     if (!_style->getRandSoundRectColor())
     {
-        colG = colR;
-        colB = colR;
+        _colG = _colR;
+        _colB = _colR;
 
-        colR *= soundRectColorCoeff[0];
-        colG *= soundRectColorCoeff[1];
-        colB *= soundRectColorCoeff[2];
+        _colR *= soundRectColorCoeff[0];
+        _colG *= soundRectColorCoeff[1];
+        _colB *= soundRectColorCoeff[2];
     }
     else
     {
-        colG = 0.4 + ((float)rand()/RAND_MAX)*0.3;
-        colB = 0.4 + ((float)rand()/RAND_MAX)*0.3;
+        _colG = 0.4 + ((float)rand()/RAND_MAX)*0.3;
+        _colB = 0.4 + ((float)rand()/RAND_MAX)*0.3;
     }
     
-    // colG = 0.39f + ((float)rand()/RAND_MAX)*0.51f;
-    //colB = 0.27f + ((float)rand()/RAND_MAX)*0.63f;   
-    colA = aMin + ((float)rand()/RAND_MAX) * 0.2f;
-    //wPulse = 0.95 + ((float)rand()/RAND_MAX) *0.1;
+    // _colG = 0.39f + ((float)rand()/RAND_MAX)*0.51f;
+    // _colB = 0.27f + ((float)rand()/RAND_MAX)*0.63f;   
+    _colA = _aMin + ((float)rand()/RAND_MAX) * 0.2f;
+    // wPulse = 0.95 + ((float)rand()/RAND_MAX) *0.1;
 
-    colA *= soundRectColorCoeff[3];
+    _colA *= soundRectColorCoeff[3];
 }
 
-//set width and height
-void SoundRect::setWidthHeight(float width, float height){
-
-    
+// set width and height
+void
+SoundRect::setWidthHeight(float width, float height)
+{    
     bool newWidth = false;
     bool newHeight = false;
-    if (width >= minDim){ 
-        rWidth = width;
+    if (width >= _minDim)
+    { 
+        _rWidth = width;
         newWidth = true;
     }
     
-    if (height >= minDim){
-        rHeight = height;
+    if (height >= _minDim)
+    {
+        _rHeight = height;
         newHeight = true;
     }
     
-    if (newWidth || newHeight){
-        updateCorners(rWidth,rHeight);
+    if (newWidth || newHeight)
+    {
+        updateCorners(_rWidth, _rHeight);
         
         //update waveform params
         setUps();
         setWaveDisplayParams();
     }
 
-    
     /*if ((width > 50.0f) && (width < (8.0f*_winWidth))){
-        rWidth = width;
+        _rWidth = width;
         newSet = true;
     }
     if ( (height > 50.0f) && (width < (8.0f*_winHeight))){
-        rHeight = height;
+        _rHeight = height;
         newSet = true;
     }
     
-    if (newSet == true){
-        updateCorners(rWidth,rHeight);
+    if (newSet){
+        updateCorners(_rWidth,_rHeight);
         
         //update waveform params
         setUps();
@@ -263,45 +272,44 @@ void SoundRect::setWidthHeight(float width, float height){
      */
 }
 
-//getters for width and height
-float SoundRect::getWidth(){
-    return rWidth;
+// getters for width and height
+float
+SoundRect::getWidth()
+{
+    return _rWidth;
 }
 
-float SoundRect::getHeight(){
-    return rHeight;
+float
+SoundRect::getHeight()
+{
+    return _rHeight;
 }
 
-//update box corners with new width values
-void SoundRect::updateCorners(float width, float height){
-    rtop = rY + height * 0.5f;
-    rbot = rY - height * 0.5f;
-    rright = rX + width * 0.5f;
-    rleft = rX - width * 0.5f;
-    //    cout << "Sound Rect " << myId << ": "
-    //    << rtop << ", " << rright << ", " <<
-    //    rbot << ", " << rleft << endl;
+// update box corners with new width values
+void SoundRect::updateCorners(float width, float height)
+{
+    _rtop = _rY + height * 0.5f;
+    _rbot = _rY - height * 0.5f;
+    _rright = _rX + width * 0.5f;
+    _rleft = _rX - width * 0.5f;
+    //    cout << "Sound Rect " << _id << ": "
+    //    << _rtop << ", " << _rright << ", " <<
+    //    _rbot << ", " << _rleft << endl;
 }
 
-
-
-
-//set upsampling for waveform display
-void SoundRect::setUps(){
+// set upsampling for waveform display
+void
+SoundRect::setUps()
+{
     float sizeFactor = 10.0f;
-    if (orientation == true)
-        ups = (float) _winWidth/rWidth;
+    if (_orientation)
+        _ups = (float) _winWidth/_rWidth;
     else
-        ups = (float) _winHeight/rHeight;
+        _ups = (float) _winHeight/_rHeight;
     
-    if (ups < 1)
-        ups = 1;
+    if (_ups < 1)
+        _ups = 1;
 }
-
-
-
-
-
 
 ////process mouse movement/selection
 //void SoundRect::procMovement(int x, int y)
@@ -311,17 +319,17 @@ void SoundRect::setUps(){
 //            cout << "pickedArray[" << i <<"]: " << pickedArray[i]<<endl;
 //            switch (i) {
 //                case INSIDE:
-//                    if (lastX != (float)x){
-//                        rX += ((float)x - lastX);
-//                        updateCorners(rWidth,rHeight);
+//                    if (_lastX != (float)x){
+//                        _rX += ((float)x - _lastX);
+//                        updateCorners(_rWidth,_rHeight);
 //                    }
-//                    if (lastY != (float)y){
-//                        rY -= ((float)y - lastY);
-//                        updateCorners(rWidth,rHeight);
+//                    if (_lastY != (float)y){
+//                        _rY -= ((float)y - _lastY);
+//                        updateCorners(_rWidth,_rHeight);
 //                    }
-//                    //                    if (lastY > 0){
-//                    //                        rHeight -= (y- lastY);
-//                    //                        updateCorners(rWidth, rHeight);
+//                    //                    if (_lastY > 0){
+//                    //                        _rHeight -= (y- _lastY);
+//                    //                        updateCorners(_rWidth, _rHeight);
 //                    //                    }
 //                    //                    // m_top = (m_screenHeight - y) * m_screenScaleH;
 //                    break;
@@ -335,14 +343,14 @@ void SoundRect::setUps(){
 //                    // m_left = x * m_screenScaleW;
 //                    break;
 //                case RIGHT:
-//                    if (lastX != (float)x){
-//                        rX += (float)x - lastX;
-//                        cout << "rx" << rX << endl;
-//                        updateCorners(rWidth,rHeight);
+//                    if (_lastX != (float)x){
+//                        _rX += (float)x - _lastX;
+//                        cout << "rx" << _rX << endl;
+//                        updateCorners(_rWidth,_rHeight);
 //                    }
-//                    if (lastY != (float)y){
-//                        rY -= ((float)y - lastY);
-//                        updateCorners(rWidth,rHeight);
+//                    if (_lastY != (float)y){
+//                        _rY -= ((float)y - _lastY);
+//                        updateCorners(_rWidth,_rHeight);
 //                    }
 //                    break;
 //                    
@@ -352,66 +360,70 @@ void SoundRect::setUps(){
 //        }
 //    }
 //    
-//    lastX = (float)x;
-//    lastY = (float)y;
+//    _lastX = (float)x;
+//    _lastY = (float)y;
 //}
 
-void SoundRect::associateSound(double * theBuff,unsigned long buffFrames,unsigned int buffChans){
-    
-    myBuff = theBuff;
-    myBuffFrames = buffFrames;
-    myBuffChans = buffChans;
-//    if (orientation == true)
-//        setWidthHeight((float)buffFrames/20000.f,rHeight);
-//    else
-//        setWidthHeight(rWidth,(float)buffFrames/30000.f);
+void
+SoundRect::associateSound(double * buff,
+                          unsigned long buffFrames,
+                          unsigned int buffChans)
+{    
+    _buff = buff;
+    _buffFrames = buffFrames;
+    _buffChans = buffChans;
+    //    if (_orientation)
+    //        setWidthHeight((float)buffFrames/20000.f,_rHeight);
+    //    else
+    //        setWidthHeight(_rWidth,(float)buffFrames/30000.f);
     
     setWaveDisplayParams();
-
 }
 
-void SoundRect::setWaveDisplayParams(){
-    if (orientation == true){
-        myBuffInc = myBuffFrames/(ups*rWidth);
-        
-    }else{
-        myBuffInc = myBuffFrames/(ups*rHeight);
-    }
+void
+SoundRect::setWaveDisplayParams()
+{
+    if (_orientation)
+        _buffInc = _buffFrames/(_ups*_rWidth);    
+    else
+        _buffInc = _buffFrames/(_ups*_rHeight);
 }
 
-//draw function
-void SoundRect::draw(){
+// draw function
+void
+SoundRect::draw()
+{
     glPushMatrix();
     //rect properties
-//    
-//    if (colA > (aMax - 0.005)){
-//        aTarg = aMin;
-//        lambda = 0.999+pRate;
-//    }else if (colA < (aMin + 0.005))
-//    {
-//        aTarg = aMax;
-//        lambda = 0.999;
-//    }
-//    
-    //colA = 0.18f + 0.1f*sin(0.5f*PI*GTime::instance().sec + aPhase);
-
-    //draw rectangle
-    glColor4f(colR,colG,colB,colA);
+    //    
+    //    if (_colA > (_aMax - 0.005)){
+    //        _aTarg = _aMin;
+    //        _lambda = 0.999+_pRate;
+    //    }else if (_colA < (_aMin + 0.005))
+    //    {
+    //        _aTarg = _aMax;
+    //        _lambda = 0.999;
+    //    }
+    //    
+    //_colA = 0.18f + 0.1f*sin(0.5f*PI*GTime::instance().sec + _aPhase);
     
-    //    double theTime = (GTime::instance().sec-startTime);
-    //    rX += 0.1*sin(2*PI*0.12*theTime);
-    //    rY += 0.5*sin(2*PI*0.1*theTime);
-    //    updateCorners(rWidth,rHeight);
+    //draw rectangle
+    glColor4f(_colR, _colG, _colB, _colA);
+    
+    //    double t = (GTime::instance().sec-_startTime);
+    //    _rX += 0.1*sin(2*PI*0.12*t);
+    //    _rY += 0.5*sin(2*PI*0.1*t);
+    //    updateCorners(_rWidth,_rHeight);
     //    
     glBegin(GL_QUADS);
-    glVertex3f(rleft,rtop,0.0f);
-    glVertex3f(rright,rtop,0.0f);
-    glVertex3f(rright,rbot,0.0f);
-    glVertex3f(rleft,rbot,0.0f);
+    glVertex3f(_rleft, _rtop, 0.0f);
+    glVertex3f(_rright,  _rtop, 0.0f);
+    glVertex3f(_rright, _rbot, 0.0f);
+    glVertex3f(_rleft, _rbot, 0.0f);
     glEnd();
     
-    
-    if (isSelected == true){
+    if (_isSelected)
+    {
         float soundRectColorSelected[4];
         _style->getSoundRectColorSelected(soundRectColorSelected);
         glColor4f(soundRectColorSelected[0], soundRectColorSelected[1],
@@ -421,164 +433,202 @@ void SoundRect::draw(){
         glLineWidth(lineWidth);
         
         glBegin(GL_LINE_STRIP);
-        glVertex3f(rleft,rtop,0.0f);
-        glVertex3f(rright,rtop,0.0f);
-        glVertex3f(rright,rbot,0.0f);
-        glVertex3f(rleft,rbot,0.0f);
-        glVertex3f(rleft,rtop,0.0f);
+        glVertex3f(_rleft, _rtop, 0.0f);
+        glVertex3f(_rright, _rtop, 0.0f);
+        glVertex3f(_rright, _rbot, 0.0f);
+        glVertex3f(_rleft, _rbot, 0.0f);
+        glVertex3f(_rleft, _rtop, 0.0f);
         glEnd();
     }
     
-    //draw audio buffer
-    if ((myBuff) && ((showBuff == true) || (pendingBuffState == true)))
+    // draw audio buffer
+    if ((_buff) && (_showBuff || _pendingBuffState))
     {
-        //fade in out waveform
-        if (pendingBuffState == false){
-            buffAlpha = 0.996*buffAlpha;
-            if (buffAlpha < 0.001)
-                showBuff = false;
-        }else{
-            buffAlpha = 0.996*buffAlpha + 0.004*buffAlphaMax;
+        // fade in out waveform
+        if (!_pendingBuffState)
+        {
+            _buffAlpha = 0.996*_buffAlpha;
+            if (_buffAlpha < 0.001)
+                _showBuff = false;
         }
+        else
+            _buffAlpha = 0.996*_buffAlpha + 0.004*_buffAlphaMax;
         
-        //buffMult = (buffAlpha + 0.35)/globalAtten;;
+        
+        // _buffMult = (_buffAlpha + 0.35)/globalAtten;;
 
         float lineWidth = _style->getWaveLineWidth();
         glLineWidth(lineWidth);
         
         float waveColor[4];
         _style->getWaveColor(waveColor);
-        glColor4f(waveColor[0],waveColor[1],
-                  waveColor[2],colA*buffAlpha*waveColor[3]);
+        glColor4f(waveColor[0], waveColor[1],
+                  waveColor[2], _colA*_buffAlpha*waveColor[3]);
 
         float pointSize = _style->getWavePointSize();
         glPointSize(pointSize);
         
-        switch (myBuffChans) {
+        switch (_buffChans)
+        {
             case 1:
                 glBegin(GL_LINE_STRIP);
-                if (orientation ==true){
-                    
-                    for (int i  = 0; i < rWidth*ups;i++){
-                        float nextI = (float) i/ups;
+                if (_orientation)
+                {    
+                    for (int i = 0; i < _rWidth*_ups; i++)
+                    {
+                        float nextI = (float) i/_ups;
                         
-                        glVertex3f((rleft + nextI),rY + 0.5f*rHeight*(myBuff[(int)floor(i*myBuffInc)]),0.0f);
+                        glVertex3f((_rleft + nextI),
+                                   _rY + 0.5f*_rHeight*
+                                   (_buff[(int)floor(i*_buffInc)]),
+                                   0.0f);
                     }
-                }else{
-                    for (int i  = 0; i < rHeight*ups;i++){
-                        float nextI = (float) i/ups;
+                }
+                else
+                {
+                    for (int i  = 0; i < _rHeight*_ups;i++)
+                    {
+                        float nextI = (float) i/_ups;
                         
-                        glVertex3f(rX + 0.5f*rWidth*(myBuff[(int)floor(i*myBuffInc)]),(rbot + nextI),0.0f);
+                        glVertex3f(_rX + 0.5f*_rWidth*
+                                   (_buff[(int)floor(i*_buffInc)]),
+                                   (_rbot + nextI),
+                                   0.0f);
                     }
                 }
                 glEnd();
                 break;
+                
             case 2:     
-                //left channel
-                if (orientation == true){
+                // left channel
+                if (_orientation)
+                {
                     glBegin(GL_LINE_STRIP);
-                    for (int i  = 0; i < rWidth*ups;i++){
-                        float nextI = (float) i/ups;
-                        //glVertex3f((rleft + nextI),rY + rHeight*(0.24f * myBuff[2*(int)floor(i*myBuffInc)]*buffMult+0.1f),0.0f);
-                        glVertex3f((rleft + nextI),rY + 0.25*rHeight + 0.25f*rHeight*(myBuff[2*(int)floor(i*myBuffInc)]),0.0f);
+                    for (int i  = 0; i < _rWidth*_ups;i++)
+                    {
+                        float nextI = (float) i/_ups;
+                        // glVertex3f((_rleft + nextI),_rY + _rHeight*(0.24f * _buff[2*(int)floor(i*_buffInc)]*_buffMult+0.1f),0.0f);
+                        glVertex3f((_rleft + nextI),
+                                   _rY + 0.25*_rHeight + 0.25f*_rHeight*
+                                   (_buff[2*(int)floor(i*_buffInc)]),
+                                   0.0f);
                     }
                     
                     glEnd();
                     
-                    //right channel
+                    // right channel
                     glBegin(GL_LINE_STRIP);
                     
-                    for (int i  = 0; i < rWidth*ups;i++){
-                        float nextI = (float) i/ups;
+                    for (int i = 0; i < _rWidth*_ups; i++)
+                    {
+                        float nextI = (float) i/_ups;
                         
-                        glVertex3f((rleft + nextI),rY - 0.25*rHeight + 0.25f*rHeight*(myBuff[2*(int)floor(i*myBuffInc)+1]),0.0f);
-                    }
-                    glEnd();
-                }else{
-                    glBegin(GL_LINE_STRIP);
-                    for (int i  = 0; i < rHeight*ups;i++){
-                        float nextI = (float) i/ups;
-                        
-                        //glVertex3f(rX + rWidth*(0.24f * myBuff[2*(int)floor(i*myBuffInc)]*buffMult+0.1f),(rbot + nextI),0.0f);
-                        glVertex3f(rX + 0.25*rWidth + 0.25f*rWidth*(myBuff[2*(int)floor(i*myBuffInc)]),(rbot + nextI),0.0f);
-                    }
-                    
-                    glEnd();
-                    
-                    //right channel
-                    glBegin(GL_LINE_STRIP);
-                    
-                    for (int i  = 0; i < rHeight*ups;i++){
-                        float nextI = (float) i/ups;
-                        
-                     //   glVertex3f(rX + rWidth*(0.24f * myBuff[2*(int)floor(i*myBuffInc)+1]-0.1f),(rbot + nextI),0.0f);
-                         glVertex3f(rX - 0.25*rWidth + 0.25f*rWidth*(myBuff[2*(int)floor(i*myBuffInc)+1]),(rbot + nextI),0.0f);
+                        glVertex3f((_rleft + nextI),
+                                   _rY - 0.25*_rHeight + 0.25f*_rHeight*
+                                   (_buff[2*(int)floor(i*_buffInc)+1]),
+                                   0.0f);
                     }
                     glEnd();
                 }
+                else
+                {
+                    glBegin(GL_LINE_STRIP);
+                    for (int i  = 0; i < _rHeight*_ups; i++)
+                    {
+                        float nextI = (float) i/_ups;
+                        
+                        // glVertex3f(_rX + _rWidth*(0.24f * _buff[2*(int)floor(i*_buffInc)]*_buffMult+0.1f),(_rbot + nextI),0.0f);
+                        glVertex3f(_rX + 0.25*_rWidth + 0.25f*_rWidth*
+                                   (_buff[2*(int)floor(i*_buffInc)]),
+                                   (_rbot + nextI),
+                                   0.0f);
+                    }
+                    
+                    glEnd();
+                    
+                    // right channel
+                    glBegin(GL_LINE_STRIP);
+                    
+                    for (int i  = 0; i < _rHeight*_ups; i++)
+                    {
+                        float nextI = (float) i/_ups;
+                        
+                        // glVertex3f(_rX + _rWidth*(0.24f * _buff[2*(int)floor(i*_buffInc)+1]-0.1f),(_rbot + nextI),0.0f);
+                         glVertex3f(_rX - 0.25*_rWidth + 0.25f*_rWidth*
+                                    (_buff[2*(int)floor(i*_buffInc)+1]),
+                                    (_rbot + nextI),
+                                    0.0f);
+                    }
+                    glEnd();
+                }
+                
             default:
                 break;
         }
     }
     glPopMatrix();
-    
 }
 
-
-
-
-
-void SoundRect::toggleWaveDisplay()
+void
+SoundRect::toggleWaveDisplay()
 {
-    pendingBuffState = !pendingBuffState;
-    if (pendingBuffState == true)
-        showBuff = true;
+    _pendingBuffState = !_pendingBuffState;
+    if (_pendingBuffState)
+        _showBuff = true;
 }
 
 //return id
 //unsigned int SoundRect::getId()
 //{
-//    return myId;
+//    return _id;
 //}
 
 
-//check to see if a coordinate is inside this rectangle
-bool SoundRect::insideMe(float x, float y)
+// check to see if a coordinate is inside this rectangle
+bool
+SoundRect::insideMe(float x, float y)
 {
-    if ((x > rleft) && (x < rright)){
-        if ((y > rbot) && (y < rtop)){
+    if ((x > _rleft) && (x < _rright))
+    {
+        if ((y > _rbot) && (y < _rtop))
             return true;
-        }
     }
     return false;
 }
 
-//return normalized position values in x and y
-bool SoundRect::getNormedPosition(double * positionsX, double * positionsY, float x, float y,unsigned int idx)
+// return normalized position values in x and y
+bool
+SoundRect::getNormedPosition(double *positionsX,
+                             double *positionsY,
+                             float x, float y,unsigned int idx)
 {
     bool trigger = false;
-    // cout << "grainX:  " << x << " grainY: " << y << " rleft " << rleft << " rright" << rright << " rtop " << rtop << " rbottom " << rbot <<  endl;
-    if (insideMe(x,y) == true){
+    // cout << "grainX:  " << x << " grainY: " << y << " _rleft " << _rleft << " _rright" << _rright << " _rtop " << _rtop << " _rbottom " << _rbot <<  endl;
+    if (insideMe(x,y))
+    {
         trigger = true;
-        if (orientation == true){
-            positionsX[idx] = (double)((x-rleft) / rWidth);
-            positionsY[idx] = (double)((y-rbot) / rHeight);
-        }else{
-            positionsY[idx] = (double)((x-rleft) / rWidth);
-            positionsX[idx] = (double)((y-rbot) / rHeight);
+        if (_orientation)
+        {
+            positionsX[idx] = (double)((x-_rleft) / _rWidth);
+            positionsY[idx] = (double)((y-_rbot) / _rHeight);
         }
-        //cout << positionsX[idx] << ", " << positionsY[idx]<<endl;
+        else
+        {
+            positionsY[idx] = (double)((x-_rleft) / _rWidth);
+            positionsX[idx] = (double)((y-_rbot) / _rHeight);
+        }
+        // cout << positionsX[idx] << ", " << positionsY[idx]<<endl;
         if ((positionsY[idx] < 0.0)|| (positionsY[idx] > 1.0))
-            cout << "problem with x trigger pos - see soundrect get normed pos" << endl;
+            cout <<
+                "problem with x trigger pos - see soundrect get normed pos" << endl;
         if ((positionsY[idx] < 0.0)|| (positionsY[idx] > 1.0))
-            cout << "problem with x trigger pos - see soundrect get normed pos" << endl;
+            cout <<
+                "problem with x trigger pos - see soundrect get normed pos" << endl;
     }
+    
     return trigger;
 }
 
-
-
-//set name
-void SoundRect::setName( char * name)
-{
-}
+// set name
+void
+SoundRect::setName(char *name) {}

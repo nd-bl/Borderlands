@@ -29,46 +29,43 @@
 
 #include "Window.h"
 
-
-
-//destructor
-Window::~Window(){
-    delete [] hanningWin;
-    delete [] triWin;
-    //delete [] trapWin;
-    delete [] sincWin;
-    delete [] rexpDecWin;
-    delete [] expDecWin;
+Window::~Window()
+{
+    delete []_hanningWin;
+    delete []_triWin;
+    //delete []_trapWin;
+    delete []_sincWin;
+    delete []_rexpDecWin;
+    delete []_expDecWin;
 }
 
-
-//constructor
 Window::Window(unsigned long length)
 {
-    hanningWin = new double[length];
-    triWin = new double[length];
-    //trapWin = new double[length];
-    expDecWin = new double[length];
-    rexpDecWin = new double[length];
-    sincWin = new double[length];
+    _hanningWin = new double[length];
+    _triWin = new double[length];
+    //_trapWin = new double[length];
+    _expDecWin = new double[length];
+    _rexpDecWin = new double[length];
+    _sincWin = new double[length];
     
-    //create
+    // create
     generateWindows(length);
-    
 }
 
-
-int Window::numWindows(){
+int
+Window::numWindows()
+{
     return 6;
 }
 
-Window & Window::Instance()
+Window &
+Window::instance()
 {
-    static Window * theWindow = NULL;
-    if (theWindow == NULL)
-            theWindow = new Window( WINDOW_LEN );
+    static Window *_window = NULL;
+    if (_window == NULL)
+        _window = new Window(WINDOW_LEN);
         
-        return *theWindow;
+    return *_window;
 }
 
 //
@@ -112,47 +109,49 @@ Window & Window::Instance()
 //    
 //}
 
-//create all windows
-void Window::generateWindows(unsigned long length){
-    //clear all windows
-    for (int i = 0; i < length; i++){
-        hanningWin[i] = (double)0.0;
-        triWin[i] = (double)0.0;
-       // trapWin[i] = (double)0.0;
-        sincWin[i] = (double)0.0;
-        expDecWin[i] = (double)0.0;
-        rexpDecWin[i] = (double)0.0;
-        
+// create all windows
+void
+Window::generateWindows(unsigned long length)
+{
+    // clear all windows
+    for (int i = 0; i < length; i++)
+    {
+        _hanningWin[i] = (double)0.0;
+        _triWin[i] = (double)0.0;
+        // _trapWin[i] = (double)0.0;
+        _sincWin[i] = (double)0.0;
+        _expDecWin[i] = (double)0.0;
+        _rexpDecWin[i] = (double)0.0;
     }
-    hanning(hanningWin,length);
-    triangle(triWin, length);
-    //trapezoid(trapWin, length);
-    sinc(sincWin,length,8);
-    expdec(expDecWin, rexpDecWin, length);
+    
+    hanning(_hanningWin, length);
+    triangle(_triWin, length);
+    //trapezoid(_trapWin, length);
+    sinc(_sincWin, length, 8);
+    expdec(_expDecWin, _rexpDecWin, length);
 }
-
 
 // window generation functions
 
 //-------------------------------------------------------------------------------
 // hanning / raised cosine window
 //-------------------------------------------------------------------------------
-void Window::hanning( double * window, unsigned long length )
+void
+Window::hanning(double *window, unsigned long length)
 {
     assert(length > 0);
+    
     unsigned long i;
     double pi, phase = 0, delta;
     
     delta = 2 * PI / (double) length;
     
-    for( i = 0; i < length; i++ )
+    for(i = 0; i < length; i++)
     {
-        window[i] = (double)( 0.5 * ( 1.0 - cos( phase ) ) );
+        window[i] = (double)(0.5 * (1.0 - cos(phase)));
         phase += delta;
     }
-    
 }
-
 
 //-------------------------------------------------------------------------------
 // 
@@ -164,28 +163,26 @@ void Window::hanning( double * window, unsigned long length )
 //}
 
 
-
 //-------------------------------------------------------------------------------
 // triangle window
 //-------------------------------------------------------------------------------
-void Window::triangle( double * window, unsigned long length )
+void
+Window::triangle(double *window, unsigned long length)
 {
     assert(length > 0);
     
-    double norm = ( 2.0 / ( (double)length - 1 ) );
+    double norm = (2.0 / ((double)length - 1));
     double invnorm = 1.0/norm;
     
-    for (int i = 0; i < length; i++) {
+    for (int i = 0; i < length; i++)
         window[i] =norm * (invnorm - fabs(i - invnorm));
-    }
-    
 }
-
 
 //-------------------------------------------------------------------------------
 // 
 //-------------------------------------------------------------------------------
-void Window::expdec( double * forWin, double * revWin, unsigned long length )
+void
+Window::expdec(double * forWin, double * revWin, unsigned long length)
 {
     assert(length > 0);
     
@@ -197,22 +194,19 @@ void Window::expdec( double * forWin, double * revWin, unsigned long length )
     double eps = 0.0005;
     unsigned long transition = length - 48;
     
-    for (int i = 0; i < length; i++){
-        forWin[i] = exp(- ( (double) i)*tauInv);
+    for (int i = 0; i < length; i++)
+    {
+        forWin[i] = exp(-((double) i)*tauInv);
         if (revWin)
             revWin[length - i - 1] = forWin[i]; 
     }
-    
 }
-
-
-
-
 
 //-------------------------------------------------------------------------------
 // SINC window with flexible number of zero crossings
 //-------------------------------------------------------------------------------
-void Window::sinc( double * window, unsigned long length, int numZeroCross)
+void
+Window::sinc(double * window, unsigned long length, int numZeroCross)
 {
     //note - numZeroCross should be even number, otherwise window will shift.
     //note also - numZeroCross = 1 is Lanczos window - main lobe
@@ -220,47 +214,51 @@ void Window::sinc( double * window, unsigned long length, int numZeroCross)
     double x = -(numZeroCross)/2.0;
    // std::cout << numZeroCross << endl;
     
-    for (int i = 0; i < length; i++) {
-        if (x != 0){
-        sincWin[i] = fabs(sin( PI * x)/(PI * x));
-        }else{
-            sincWin[i] = (double) 1.0;
-        }
+    for (int i = 0; i < length; i++)
+    {
+        if (x != 0)
+            _sincWin[i] = fabs(sin( PI * x)/(PI * x));
+        else
+            _sincWin[i] = (double) 1.0;
 
         x += inc;
     }
 }
 
-
-
-
 //return pointer to required window
-double * Window::getWindow(unsigned int windowType)
+double *
+Window::getWindow(unsigned int windowType)
 {
-    switch (windowType) {
+    switch (windowType)
+    {
         case HANNING:
-            return hanningWin;
-            break;
-        case TRIANGLE:
-           // cout << "triangle-selected"<<endl;
-            return triWin;
-            break;
-//        case TRAPEZOID:
-//            return trapWin;
-//            break;
-        case EXPDEC:
-            return expDecWin;
-            break;
-        case REXPDEC:
-            return rexpDecWin;
-            break;
-        case SINC:
-            return sincWin;
-            break;
-        default:
-            return hanningWin;
+            return _hanningWin;
             break;
             
+        case TRIANGLE:
+           // cout << "triangle-selected"<<endl;
+            return _triWin;
+            break;
+            
+            //        case TRAPEZOID:
+            //            return trapWin;
+            //            break;
+            
+        case EXPDEC:
+            return _expDecWin;
+            break;
+            
+        case REXPDEC:
+            return _rexpDecWin;
+            break;
+            
+        case SINC:
+            return _sincWin;
+            break;
+            
+        default:
+            return _hanningWin;
+            break;
     }
 }
 

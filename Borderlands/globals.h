@@ -21,46 +21,45 @@
 
 
 //
-//  theglobals.h
+//  globals.h
 //  Borderlands
 //
 //  Created by Christopher Carlson on 11/15/11.
 //
 
 
-#ifndef THEGLOBALS_H
-#define THEGLOBALS_H
+#ifndef GLOBALS_H
+#define GLOBALS_H
 
 
 #include <stdlib.h>
 #include <GTime.h>
 
-
-//create sample datatype
+// create sample datatype
 #define SAMPLE double
-//create rtaudio format
-#define MY_FORMAT RTAUDIO_FLOAT64
-//set the sample rate
-#define MY_SRATE 44100
-//number of output channels
-#define MY_CHANNELS 2
 
-//window length
+// create rtaudio format
+#define FORMAT RTAUDIO_FLOAT64
+
+// set the sample rate
+#define SRATE 44100
+
+// number of output channels
+#define CHANNELS 2
+
+// window length
 #define WINDOW_LEN 2048
-//graphics picking
+
+// graphics picking
 #define NAMEINCREMENT 100
 
-//function to produce a random float
+// function to produce a random float
 #define randf() ( (float)rand()/RAND_MAX )
 
 #define randd() ( (double)rand()/RAND_MAX )
 
-
-//global attenuation to prevent clipping
+// global attenuation to prevent clipping
 static const double globalAtten = 0.5;
-
-
-
 
 //osc local port
 //#define LOCAL_PORT 10001
@@ -79,6 +78,5 @@ static const double globalAtten = 0.5;
 //    float x;
 //    float y;
 //};
-
 
 #endif

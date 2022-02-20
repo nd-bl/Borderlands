@@ -30,9 +30,10 @@
 #ifndef GRAINVOICE_H
 #define GRAINVOICE_H
 
-#include "theglobals.h"
+#include "globals.h"
 #include "AudioFileSet.h"
 #include "Window.h"
+
 #include <vector>
 #include <math.h>
 #include <time.h>
@@ -47,147 +48,165 @@
 #include <GL/glut.h>
 #endif
 
-
-//forward declarations
+// forward declarations
 class GrainVoice;
 class GrainVis;
 class Style;
 
-
-//AUDIO CLASS
+// AUDIO CLASS
 class GrainVoice
-{
-    
+{ 
 public:
-    //destructor
     virtual ~GrainVoice();
     
-    // constructor
     GrainVoice(Style *style,
-               vector<AudioFile *> * soundSet,float durationMs,float thePitch);
+               vector<AudioFile *> *soundSet,
+               float durationMs,
+               float thePitch);
     
-    //dump samples into next buffer
-    void nextBuffer(double * accumBuff,unsigned int numFrames,unsigned int bufferPos, int name);
+    // dump samples into next buffer
+    void nextBuffer(double *accumBuff,
+                    unsigned int numFrames,
+                    unsigned int bufferPos,
+                    int name);
     
-    
-    //set on
-    bool playMe(double * startPositions,double * startVols);
+    // set on
+    bool playMe(double *startPositions,
+                double *startVols);
 
-    //report state
+    // report state
     bool isPlaying();
     
-    //queue up params for next grain
+    // queue up params for next grain
     void setDurationMs(float dur);
     
-    //set/get playback rate
+    // set/get playback rate
     void setPitch(float newPitch);
     
-    //get playback rate
+    // get playback rate
     float getPitch();    
     
-    //volume
+    // volume
     void setVolume(float theVolNormed);
     float getVolume();
     
-    //set spatialization
-    void setChannelMultipliers(double* multipliers);
+    // set spatialization
+    void setChannelMultipliers(double *multipliers);
     
-    //set playback direction
+    // set playback direction
     void setDirection(float thedir);
     
-    //change window type
+    // change window type
     void setWindow(unsigned int windowType);
     
-    
 protected:
-    //makes temp  params permanent
+    // makes temp params permanent
     void updateParams();
     
 private:
+    // pointer to all audio file buffers
+    vector <AudioFile *> *_sounds;
     
-    //pointer to all audio file buffers
-    vector <AudioFile *> *theSounds;
-    //status
-    bool playingState;
-    //param update required flag
-    bool newParam;
+    // status
+    bool _playingState;
     
-    //numsounds
-    unsigned int numSounds;
+    // param update required flag
+    bool _newParam;
     
-    //grain parameters
-    float duration, queuedDuration;
-    double winDurationSamps;
-    double pitch,queuedPitch;
-    double direction, queuedDirection; 
-    double playInc;
+    // numsounds
+    unsigned int _numSounds;
     
-    //local volume (set by user)
-    float localAtten;
-    float queuedLocalAtten;
+    // grain parameters
+    float _duration;
+    float _queuedDuration;
+    double _winDurationSamps;
+    double _pitch;
+    float _queuedPitch;
+    double _direction;
+    float _queuedDirection; 
+    double _playInc;
     
-    //panning values
-    double * chanMults;
-    double * queuedChanMults;
+    // local volume (set by user)
+    float _localAtten;
+    float _queuedLocalAtten;
     
-    //audio files being sampled
-    vector<int> * activeSounds;
+    // panning values
+    double *_chanMults;
+    double *_queuedChanMults;
     
-    //window type
-    unsigned int windowType,queuedWindowType;
+    // audio files being sampled
+    vector<int> *_activeSounds;
     
-    //window reading params
-    double winInc;
-    double winReader;
+    // window type
+    unsigned int _windowType;
+    unsigned int _queuedWindowType;
     
-    //pointer to audio window (hanning, triangle, etc.)
-    double * window;
+    // window reading params
+    double _winInc;
+    double _winReader;
     
+    // pointer to audio window (hanning, triangle, etc.)
+    double *_window;
     
     //array of position values (in frames, not samples)
     //-1 means not in current soundfile
-    double * playPositions;
-    double * playVols;
+    double *_playPositions;
+    double *_playVols;
 
     Style *_style;
 };
 
-
-
-
-//GRAPHICS CLASS
-//handle display, picking.  
-//register selection listener
-class GrainVis{
+// GRAPHICS CLASS
+// handle display, picking.  
+// register selection listener
+class GrainVis
+{
 public:
-    //destructor
     ~GrainVis();
-    //constructor
+
     GrainVis(Style *style,
-             unsigned int winWidth, unsigned int winHeight,
+             unsigned int winWidth,
+             unsigned int winHeight,
              float x, float y);
 
     void updateWinWidthHeight(unsigned int newWinWidth,
                               unsigned int newWinHeight);
         
     void draw();
-    //position update function
+    
+    // position update function
     void moveTo(float x, float y);
     float getX();
     float getY();
     void trigger(float theDur);
+    
 private:
-    bool isOn,firstTrigger;
-    double startTime;
-    double triggerTime;
-    float _gX,_gY;
-    float _colR,_colG,_colB,_colA;
-    //float defG, defB;
-    float _defR, _defG, _defB, _defA;
-    float _mySize,_defSize,_onSize;//GL point size
-    float durSec;
+    bool _isOn;
+    bool _firstTrigger;
+    
+    double _startTime;
+    double _triggerTime;
+    
+    float _gX;
+    float _gY;
+    float _colR;
+    float _colG;
+    float _colB;
+    float _colA;
 
-    unsigned int _winWidth,_winHeight;
+    // float defG, defB;
+    float _defR;
+    float _defG;
+    float _defB;
+    float _defA;
+    
+    float _size;
+    float _defSize;
+    float _onSize; //GL point size
+    float _durSec;
+
+    unsigned int _winWidth;
+    unsigned int _winHeight;
 
     Style *_style;
 };

@@ -35,51 +35,57 @@
 #include <cmath>
 #include "math.h"
 #include "assert.h"
-#include "theglobals.h"
+#include "globals.h"
 #include <iostream>
 #include <Stk.h>
 
 using namespace std;
 
-enum {HANNING, TRIANGLE, EXPDEC, REXPDEC, SINC, RANDOM_WIN};
+enum
+{
+    HANNING,
+    TRIANGLE,
+    EXPDEC,
+    REXPDEC,
+    SINC,
+    RANDOM_WIN
+};
 
 class Window
 {
 public:
-    static Window & Instance();
-
+    static Window &instance();
     
-    //return window
-    double * getWindow(unsigned int windowType);
-    //resize windows - future possibility, but probably not needed
-    //void resizeWindows(unsigned long length);
+    // return window
+    double *getWindow(unsigned int windowType);
+    
+    // resize windows - future possibility, but probably not needed
+    // void resizeWindows(unsigned long length);
 
     int numWindows();
+    
 protected:
-
-    //generate windows
+    // generate windows
     void generateWindows(unsigned long length);
+    
     // window function prototypes
-    void hanning( double * window, unsigned long length );
-    //void trapezoid( double * window, unsigned long length );
-    void triangle( double * window, unsigned long length );
-    void expdec( double * forWin,double* revWin, unsigned long length );
-    void sinc( double * window, unsigned long length, int numZeroCross = 6);
+    void hanning(double * window, unsigned long length);
+    
+    // void trapezoid(double * window, unsigned long length);
+    void triangle(double * window, unsigned long length);
+    void expdec(double * forWin, double* revWin, unsigned long length);
+    void sinc(double * window, unsigned long length, int numZeroCross = 6);
 
-    
-    
 private:
     ~Window();
     Window(unsigned long length = 2048);
-    double * hanningWin;
+    
+    double *_hanningWin;
     //double * trapWin;
-    double * triWin;
-    double * expDecWin;
-    double * rexpDecWin;
-    double * sincWin;
- 
+    double *_triWin;
+    double *_expDecWin;
+    double *_rexpDecWin;
+    double *_sincWin;
 };
-
-
 
 #endif

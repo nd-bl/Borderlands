@@ -27,13 +27,13 @@
 //  Created by Christopher Carlson on 11/30/11.
 //
 
-
 #ifndef SOUNDRECT_H
 #define SOUNDRECT_H
 
-#include "theglobals.h"
+#include "globals.h"
 //#include "pt2d.h"
 //graphics includes
+
 #ifdef __MACOSX_CORE__
 #include <GLUT/glut.h>
 #else
@@ -41,7 +41,6 @@
 #include <GL/glu.h>
 #include <GL/glut.h>
 #endif
-
 
 #include <iostream>
 #include <math.h>
@@ -51,98 +50,122 @@
 
 using namespace std;
 
-
-
-
-//id for this class, which is incremented for each instance
-//static unsigned int boxId = 0;
+// id for this class, which is incremented for each instance
+// static unsigned int boxId = 0;
 class Style;
 class SoundRect
-{
-    
+{ 
 public:
-    
-    //destructor
     virtual ~SoundRect();
     
-    //constructor (default)
-    SoundRect(Style *style, unsigned int winWidth, unsigned int winHeight);
+    SoundRect(Style *style,
+              unsigned int winWidth, unsigned int winHeight);
 
     // when win size changes
     void updateWinWidthHeight(unsigned int newWinWidth,
                               unsigned int newWinHeight);
     
-    //other object initialization code
+    // other object initialization code
     void init();
     
-    //display functions
+    // display functions
     void draw();
     
-    //properties
+    // properties
     void setWidthHeight(float width, float height);
 
     float getHeight();
     float getWidth();
     bool getOrientation();
     
-    //process mouse drag
-    void move(float xDiff,float yDiff);
+    // process mouse drag
+    void move(float xDiff, float yDiff);
 
-    //set selection (highlight)
+    // set selection (highlight)
     void setSelectState(bool state);
-    //determine if mouse click is in selection range
+    
+    // determine if mouse click is in selection range
     bool select(float x, float y);
 
     void toggleWaveDisplay();
-    void associateSound(double* theBuff,unsigned long buffFrames, unsigned int buffChans );
-    //return id
-    //unsigned int getId();
+    void associateSound(double* buff,
+                        unsigned long buffFrames,
+                        unsigned int buffChans);
+    // return id
+    // unsigned int getId();
     
-    //return 
-   bool getNormedPosition(double * positionsX, double * positionsY, float x, float y,unsigned int idx);
+    // return 
+   bool getNormedPosition(double *positionsX,
+                          double *positionsY,
+                          float x, float y,
+                          unsigned int idx);
 
-    //change from vertical to horizontal
+    // change from vertical to horizontal
     void toggleOrientation();
-    //set name
-    void setName(char * name);
     
+    // set name
+    void setName(char *name);
 
 protected:
-    //set upsampling for waveform display (based on rect size/orientation)
+    // set upsampling for waveform display (based on rect size/orientation)
     void setUps();
     bool insideMe(float x, float y);
     void setWaveDisplayParams();
     void randColor();
-    //update information used for vertices with new width and height
-    void updateCorners(float width,float height);
-    
+
+    // update information used for vertices with new width and height
+    void updateCorners(float width, float height);
     
 private:
-    unsigned int myId;
-    unsigned int _winWidth, _winHeight;
-    float rWidth,rHeight;
-    float rtop,rbot,rleft,rright;
-    float rX, rY,rZ;
-    bool isSelected;
-    float colR,colG,colB,colA;
-    float minDim;
-    double * myBuff;
-    double startTime;
-    float ups;
-    unsigned long myBuffFrames;
-    unsigned int myBuffChans;
-    unsigned int myBuffInc;
-    bool showBuff;
-    bool pendingBuffState;
-    float lastX,lastY;
+    unsigned int _id;
+
+    unsigned int _winWidth;
+    unsigned int _winHeight;
+
+    float _rWidth;
+    float _rHeight;
+
+    float _rtop;
+    float _rbot;
+    float _rleft;
+    float _rright;
+
+    float _rX;
+    float _rY;
+    float _rZ;
+
+    bool _isSelected;
+
+    float _colR;
+    float _colG;
+    float _colB;
+    float _colA;
     
-    //other display params
-    float aMin,aMax,aTarg,lambda,pRate;
-    float aPhase;
-    float buffAlphaMax;
-    float buffAlpha;
-    double buffMult;
-    bool orientation;
+    float _minDim;
+    double *_buff;
+    double _startTime;
+    float _ups;
+    
+    unsigned long _buffFrames;
+    unsigned int _buffChans;
+    unsigned int _buffInc;
+    
+    bool _showBuff;
+    bool _pendingBuffState;
+    float _lastX;
+    float _lastY;
+    
+    // other display params
+    float _aMin;
+    float _aMax;
+    float _aTarg;
+    float _lambda;
+    float _pRate;
+    float _aPhase;
+    float _buffAlphaMax;
+    float _buffAlpha;
+    double _buffMult;
+    bool _orientation;
     
     Style *_style;
 };

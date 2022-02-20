@@ -29,7 +29,7 @@
 
 
 //my includes
-#include "theglobals.h"
+#include "globals.h"
 
 //graphics includes
 #ifdef __MACOSX_CORE__
@@ -67,102 +67,130 @@
 
 using namespace std;
 
-unsigned int _screenWidth, _screenHeight;
-unsigned int _winWidth, _winHeight;
-
-// NOTE: start in windowed mode instead of fullscreen
-// otherwise, when quitting fullscreen, the windows would stay maximized
-// and would still take the whole screen (but with a top bar)
-//bool isFullScreen = true;
-bool isFullScreen = false;
-
-Style *_style = NULL;
-
 //-----------------------------------------------------------------------------
 // Defines a point in a 3D space (coords x, y and z)
 //-----------------------------------------------------------------------------
 struct pt3d
 { 
-    pt3d( GLfloat _x, GLfloat _y, GLfloat _z ) : x(_x), y(_y), z(_z) {};
+    pt3d( GLfloat _x, GLfloat _y, GLfloat _z ) :
+    x(_x), y(_y), z(_z) {};
     
     float x;
     float y;
     float z;
 };
 
-
-
 //-----------------------------------------------------------------------------
 // Shared Data Structures, Global parameters
 //-----------------------------------------------------------------------------
-//audio system
-MyRtAudio * theAudio = NULL;
-//library path
-string g_audioPath = "./loops/";
-//parameter string
-string paramString = "";
-//desired audio buffer size 
-unsigned int g_buffSize = 1024;
-//audio files
-vector <AudioFile *> * mySounds = NULL;
-//audio file visualization objects
-vector <SoundRect *> * soundViews = NULL;
-//grain cloud audio objects
-vector<GrainCluster *> * grainCloud = NULL;
-//grain cloud visualization objects
-vector<GrainClusterVis *> * grainCloudVis;
-//cloud counter
-unsigned int numClouds = 0;
+// audio system
+MyRtAudio * _audio = NULL;
+// library path
+string _audioPath = "./loops/";
+// parameter string
+string _paramString = "";
+// desired audio buffer size 
+unsigned int _buffSize = 1024;
+// audio files
+vector <AudioFile *> *_sounds = NULL;
+// audio file visualization objects
+vector <SoundRect *> *_soundViews = NULL;
+// grain cloud audio objects
+vector<GrainCluster *> *_grainCloud = NULL;
+// grain cloud visualization objects
+vector<GrainClusterVis *> *_grainCloudVis = NULL;
+// cloud counter
+unsigned int _numClouds = 0;
 
 //global time increment - samples per second
 //global time is incremented in audio callback
-const double samp_time_sec = (double) 1.0 / (double)MY_SRATE;
+const double _sampTimeSec = (double) 1.0 / (double)SRATE;
 
 
 //Initial camera movement vars
 //my position
-pt3d position(0.0,0.0,0.0f);
+pt3d _position(0.0,0.0,0.0f);
 
 
 //ENUMS 
-//user selection mode
-enum{RECT,CLOUD};
-enum{MOVE,RESIZE};
-//default selection mode
-int selectionMode = CLOUD;
-int dragMode = MOVE;
-bool resizeDir = false; //for rects
-//rubber band select params
-int rb_anchor_x = -1;
-int rb_anchor_y = -1;
+// user selection mode
+enum
+{
+    RECT,
+    CLOUD
+};
+enum
+{
+    MOVE,
+    RESIZE
+};
+// default selection mode
+int _selectionMode = CLOUD;
+int _dragMode = MOVE;
+bool _resizeDir = false; //for rects
+// rubber band select params
+int _rbAnchorX = -1;
+int _rb_AnchorY = -1;
 
-//not used yet - for multiple selection
-vector<int> * selectionIndices = new vector<int>;
+// not used yet - for multiple selection
+vector<int> *_selectionIndices = new vector<int>;
 
-//selection helper vars
-int selectedCloud = -1;
-int selectedRect = -1;
-bool menuFlag = true;
-int selectionIndex = 0;
+// selection helper vars
+int _selectedCloud = -1;
+int _selectedRect = -1;
+bool _menuFlag = true;
+int _selectionIndex = 0;
 
-//cloud parameter changing
-enum{NUMGRAINS,DURATION,WINDOW, MOTIONX, MOTIONY,MOTIONXY,DIRECTION,OVERLAP, PITCH, ANIMATE,P_LFO_FREQ,P_LFO_AMT,SPATIALIZE,VOLUME};
-//flag indicating parameter change
-bool paramChanged = false;
-unsigned int currentParam = NUMGRAINS;
-double lastParamChangeTime = 0.0;
-double tempParamVal = -1.0;
+// cloud parameter changing
+enum
+{
+    NUMGRAINS,
+    DURATION,
+    WINDOW,
+    MOTIONX,
+    MOTIONY,
+    MOTIONXY,
+    DIRECTION,
+    OVERLAP,
+    PITCH,
+    ANIMATE,
+    P_LFO_FREQ,
+    P_LFO_AMT,
+    SPATIALIZE,
+    VOLUME
+};
+// flag indicating parameter change
+bool _paramChanged = false;
+unsigned int _currentParam = NUMGRAINS;
+double _lastParamChangeTime = 0.0;
+double _tempParamVal = -1.0;
 
+// mouse coordinate initialization
+int _mouseX = -1;
+int _mouseY = -1;
+long _veryHighNumber = 50000000;
+long _lastDragX = _veryHighNumber;
+long _lastDragY = _veryHighNumber;
 
+//
+unsigned int _screenWidth;
+unsigned int _screenHeight;
 
+unsigned int _winWidth;
+unsigned int _winHeight;
 
-//mouse coordinate initialization
-int mouseX = -1;
-int mouseY = -1;
-long veryHighNumber = 50000000;
-long lastDragX = veryHighNumber;
-long lastDragY = veryHighNumber;
+// NOTE: start in windowed mode instead of fullscreen
+// otherwise, when quitting fullscreen, the windows would stay maximized
+// and would still take the whole screen (but with a top bar)
+bool _isFullScreen = false;
 
+Style *_style = NULL;
+
+float _sidewaysMoveSpeed = 10.0f;
+float _upDownMoveSpeed = 10.0f;
+
+// for negative value entry
+bool _negativeFlag = false;
 
 //--------------------------------------------------------------------------------
 // FUNCTION PROTOTYPES
@@ -181,45 +209,54 @@ void mouseDrag(int x, int y);
 void mousePassiveMotion(int x, int y);
 void updateMouseCoords(int x, int y);
 void initialize();
-void draw_string( GLfloat x, GLfloat y, GLfloat z, const char * str, GLfloat scale);
+void draw_string(GLfloat x, GLfloat y, GLfloat z, const char * str, GLfloat scale);
 void printUsage();
 void printManual();
 void printParam();
 void drawAxis();
-int audioCallback( void * outputBuffer, void * inputBuffer, unsigned int numFrames, double streamTime,RtAudioStreamStatus status, void * userData);
+int audioCallback(void *outputBuffer, void *inputBuffer,
+                  unsigned int numFrames, double streamTime,
+                  RtAudioStreamStatus status, void *userData);
 void cleaningFunction();
-
-
 
 
 //--------------------------------------------------------------------------------
 // Cleanup code
 //--------------------------------------------------------------------------------
 
-void cleaningFunction(){
-    try {
-        theAudio->stopStream();
-        theAudio->closeStream();
-    } catch (RtAudioError &err) {
+void
+cleaningFunction()
+{
+    try
+    {
+        _audio->stopStream();
+        _audio->closeStream();
+    }
+    catch (RtAudioError &err)
+    {
         err.printMessage();
     }
-    if (mySounds != NULL)
-        delete mySounds;
-    if (theAudio !=NULL)
-        delete theAudio;
+    if (_sounds != NULL)
+        delete _sounds;
+    if (_audio != NULL)
+        delete _audio;
     
-    if (grainCloud!=NULL){
-        delete grainCloud;
+    if (_grainCloud != NULL)
+    {
+        delete _grainCloud;
     }    
     
-    if (grainCloudVis!=NULL){
-        delete grainCloudVis;
+    if (_grainCloudVis != NULL)
+    {
+        delete _grainCloudVis;
     }
-    if (soundViews != NULL){
-        delete soundViews;
+    if (_soundViews != NULL)
+    {
+        delete _soundViews;
     }
-    if (selectionIndices != NULL){
-        delete selectionIndices;
+    if (_selectionIndices != NULL)
+    {
+        delete _selectionIndices;
     }
 
     if (_style != NULL)
@@ -229,22 +266,21 @@ void cleaningFunction(){
     }
 }
 
-
-
-void updateWindowDimensions(int newWinWidth, int newWinHeight)
+void
+updateWindowDimensions(int newWinWidth, int newWinHeight)
 {
     // rects
-    if (soundViews)
+    if (_soundViews)
     {
-        for (int i = 0; i < soundViews->size(); i++)
-            (*soundViews)[i]->updateWinWidthHeight(newWinWidth,newWinHeight);
+        for (int i = 0; i < _soundViews->size(); i++)
+            (*_soundViews)[i]->updateWinWidthHeight(newWinWidth,newWinHeight);
     }
     
     // grains
-    if (grainCloudVis)
+    if (_grainCloudVis)
     {
-        for (int i = 0; i < grainCloudVis->size(); i++)
-            (*grainCloudVis)[i]->updateWinWidthHeight(newWinWidth,newWinHeight);
+        for (int i = 0; i < _grainCloudVis->size(); i++)
+            (*_grainCloudVis)[i]->updateWinWidthHeight(newWinWidth,newWinHeight);
     }
 }
 
@@ -252,33 +288,35 @@ void updateWindowDimensions(int newWinWidth, int newWinHeight)
 //   Audio Callback
 //================================================================================
 
-//audio callback
-int audioCallback( void * outputBuffer, void * inputBuffer, unsigned int numFrames, double streamTime,
-                  RtAudioStreamStatus status, void * userData)
+// audio callback
+int
+audioCallback(void *outputBuffer, void *inputBuffer,
+              unsigned int numFrames, double streamTime,
+              RtAudioStreamStatus status, void *userData)
 {
-        //cast audio buffers
-    SAMPLE * out = (SAMPLE *)outputBuffer;
-    SAMPLE * in = (SAMPLE *)inputBuffer;
+    // cast audio buffers
+    SAMPLE *out = (SAMPLE *)outputBuffer;
+    SAMPLE *in = (SAMPLE *)inputBuffer;
     
-    memset(out, 0, sizeof(SAMPLE)*numFrames*MY_CHANNELS );
-    if (menuFlag == false){
-        for(int i = 0; i < grainCloud->size(); i++){
-            grainCloud->at(i)->nextBuffer(out, numFrames);
+    memset(out, 0, sizeof(SAMPLE)*numFrames*CHANNELS);
+    if (!_menuFlag)
+    {
+        for(int i = 0; i < _grainCloud->size(); i++)
+        {
+            _grainCloud->at(i)->nextBuffer(out, numFrames);
         }
     }
-    GTime::instance().sec += numFrames*samp_time_sec;
-    // cout << GTime::instance().sec<<endl;
+    GTime::instance()._sec += numFrames*_sampTimeSec;
+    // cout << GTime::instance()._sec<<endl;
     return 0;
 }
-
-
-
 
 //================================================================================
 //   GRAPHICS/GLUT
 //================================================================================
-
-void windowInit(){    
+void
+windowInit()
+{    
     // assign glut function calls
     glutIdleFunc(idleFunc);
     glutReshapeFunc(reshape);
@@ -289,10 +327,11 @@ void windowInit(){
     glutKeyboardFunc(keyboardFunc);
     glutKeyboardUpFunc(keyUpFunc);
     // set the special function - called on special keys events (fn, arrows, pgDown, etc)
-    glutSpecialFunc( specialFunc );
+    glutSpecialFunc(specialFunc);
 }
 
-void setWindowedMode()
+void
+setWindowedMode()
 {
     _winWidth = 0.6*_screenWidth;
     _winHeight = 0.6*_screenHeight;
@@ -303,22 +342,23 @@ void setWindowedMode()
     glutPositionWindow(centerXCorner,centerYCorner);
 }
 
-void toggleFullScreen(){
-    if (isFullScreen)
+void
+toggleFullScreen()
+{
+    if (_isFullScreen)
     {
         setWindowedMode();
         
-        isFullScreen = false;
+        _isFullScreen = false;
         /*
         glutLeaveGameMode();
         cout << "left game mode" << endl;
         windowInit();
         glutMainLoop();
         */
-        
-        
-    }else{
-        
+    }
+    else
+    {    
         /*
         //glutFullScreen();
         string res;
@@ -345,42 +385,36 @@ void toggleFullScreen(){
         */
         glutFullScreen();
         
-        isFullScreen = true;
+        _isFullScreen = true;
     }
     
     //glutDisplayFunc(displayFunc);
-
 }
 
 //-----------------------------------------------------------
 //  GLUT Initialization
 //-----------------------------------------------------------
-
-void initialize()
+void
+initialize()
 {
     //_style = new DefaultStyle();
     //_style = new PurpleStyle();
     _style = new PsycheStyle();
     
     // initial window settings
-    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH );
-    
+    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);    
     
     _screenWidth = glutGet(GLUT_SCREEN_WIDTH);
     _screenHeight = glutGet(GLUT_SCREEN_HEIGHT);
 
-    //_winWidth = _screenWidth;
-    //_winHeight = _screenHeight;
-
     _winWidth = 0.6*_screenWidth;
     _winHeight = 0.6*_screenHeight;
     
-    glutInitWindowSize (_winWidth,_winHeight);
+    glutInitWindowSize(_winWidth,_winHeight);
     glutInitWindowPosition (0, 0);
     glutCreateWindow("Borderlands");
 
     setWindowedMode();
-    
 
     /*
     //Game Mode   
@@ -404,8 +438,7 @@ void initialize()
     
     */
         
-    //full screen end
-
+    // full screen end
     float bgColor[4];
     _style->getBackgroundColor(bgColor);
         
@@ -417,10 +450,10 @@ void initialize()
     glDepthFunc(GL_LEQUAL);
     //set polys with counterclockwise winding to be front facing 
     //this is gl default anyway
-    glFrontFace( GL_CCW );
+    glFrontFace(GL_CCW);
     //set fill mode
-    glPolygonMode( GL_FRONT_AND_BACK, GL_FILL);
-    glPolygonMode( GL_FRONT_AND_BACK, GL_POLYGON_SMOOTH);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_POLYGON_SMOOTH);
     //enable transparency
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -443,9 +476,7 @@ void initialize()
     glutKeyboardFunc(keyboardFunc);
     glutKeyboardUpFunc(keyUpFunc);
     // set the special function - called on special keys events (fn, arrows, pgDown, etc)
-    glutSpecialFunc( specialFunc );
-    
-    //glutFullScreen();
+    glutSpecialFunc(specialFunc);
 }
 
 
@@ -453,64 +484,70 @@ void initialize()
 //------------------------------------------------------------------------------
 // GLUT display function
 //------------------------------------------------------------------------------
-void displayFunc()
+void
+displayFunc()
 {
-    //clear color and depth buffers
-    glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+    // clear color and depth buffers
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glClearDepth(1.0);
     
-    ////PUSH //save current transform
+    // PUSH //save current transform
     glPushMatrix();
     
     glLoadIdentity();
     
-    //update viewer position
-    glTranslatef(-position.x,-position.y,-position.z); //translate the screen to the position of our camera
-    if (menuFlag == false){
-        //render rectangles
-        if (soundViews){
-            for (int i = 0; i < soundViews->size(); i++)
+    // update viewer position
+    
+    // translate the screen to the position of our camera
+    glTranslatef(-_position.x, -_position.y, -_position.z);
+    if (!_menuFlag)
+    {
+        // render rectangles
+        if (_soundViews)
+        {
+            for (int i = 0; i < _soundViews->size(); i++)
             {
-                soundViews->at(i)->draw();
+                _soundViews->at(i)->draw();
             }
         }
         
-         //render grain clouds if they exist
-         if (grainCloudVis){
-             for (int i = 0; i < grainCloudVis->size(); i++)
+         // render grain clouds if they exist
+         if (_grainCloudVis)
+         {
+             for (int i = 0; i < _grainCloudVis->size(); i++)
              {
-                 grainCloudVis->at(i)->draw();
+                 _grainCloudVis->at(i)->draw();
              }
          }
         
-//print current param if editing
-        if ( (selectedCloud >= 0) || (selectedRect >= 0) )
+         // print current param if editing
+        if ((_selectedCloud >= 0) || (_selectedRect >= 0))
             printParam();
-    }else{
+    }
+    else
+    {
         printUsage();
         printManual();
     }
     
-    
-    
     //printUsage();
     
-    //POP ---//restore state
+    // POP ---//restore state
     glPopMatrix();
     
-    //flush and swap
-    glFlush();//renders and empties buffers
-    glutSwapBuffers(); // brings hidden buffer to the front (using double buffering for smoother graphics)
-    
+    // flush and swap
+
+    // renders and empties buffers
+    glFlush();
+    // brings hidden buffer to the front (using double buffering for smoother graphics
+    glutSwapBuffers();
 }
-
-
-
 
 //------------------------------------------------------------------------------
 // GLUT reshape function
 //------------------------------------------------------------------------------
-void reshape(int w, int h)
+void
+reshape(int w, int h)
 {
     glViewport(0, 0, (GLsizei) w, (GLsizei) h);
     _winWidth = w;
@@ -520,141 +557,155 @@ void reshape(int w, int h)
         
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    //glOrtho(0.0, (GLdouble) _screenWidth, 0.0, (GLdouble)_screenHeight, -10.0, 10.0);
     glOrtho(0.0, (GLdouble) _winWidth, 0.0, (GLdouble)_winHeight, -10.0, 10.0);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-    glTranslatef(-position.x,-position.y,-position.z); //translate the screen to the position of our camera
+     //translate the screen to the position of our camera
+    glTranslatef(-_position.x, -_position.y, -_position.z);
     //request redisplay
-    glutPostRedisplay( );
+    glutPostRedisplay();
 }
-
 
 //-----------------------------------------------------------------------------
 // GlUT idle function 
 //-----------------------------------------------------------------------------
-
-void idleFunc(){
+void
+idleFunc()
+{
     // render the scene
-    glutPostRedisplay( );
+    glutPostRedisplay();
 }
-
 
 ///-----------------------------------------------------------------------------
 // name: drawAxis()
 // desc: draw 3d axis
 //-----------------------------------------------------------------------------
-void drawAxis()
+void
+drawAxis()
 {
-    //PUSH -- //store state
+    // PUSH -- //store state
     glPushMatrix();
     
-    //specify vertices with this drawing mode
+    // specify vertices with this drawing mode
     glBegin(GL_LINES);
     float axisLineWidth = _style->getAxisLineWidth();
     glLineWidth(axisLineWidth);
-    //x axis
 
+    // x axis
     float axisXColor[4];
     _style->getAxisXColor(axisXColor);
     glColor4f(axisXColor[0], axisXColor[1], axisXColor[2], axisXColor[3]);
     glVertex3f(0,0,0);
     glVertex3f(_winWidth,0,0);
     
-    //y axis
+    // y axis
     float axisYColor[4];
     _style->getAxisYColor(axisYColor);
     glColor4f(axisYColor[0], axisYColor[1], axisYColor[2], axisYColor[3]);
     glVertex3f(0,0,0);
     glVertex3f(0,_winHeight,0);
     
-    //z axis
+    // z axis
     float axisZColor[4];
     _style->getAxisZColor(axisZColor);
     glColor4f(axisZColor[0], axisZColor[1], axisZColor[2], axisZColor[3]);
     glVertex3f(0,0,0);
     glVertex3f(0,0,400);
     
-    //stop drawing
+    // stop drawing
     glEnd();
     
-    //POP -- //restore state
+    // POP -- //restore state
     glPopMatrix();
 }
-
 
 //-----------------------------------------------------------------------------
 // Display simple string
 // desc: from sndpeek source - Ge Wang, et al
 //-----------------------------------------------------------------------------
-void draw_string( GLfloat x, GLfloat y, GLfloat z, const char * str, GLfloat scale = 1.0f )
+void
+draw_string(GLfloat x, GLfloat y, GLfloat z,
+            const char * str, GLfloat scale = 1.0f)
 {
-    GLint len = strlen( str ), i;
+    GLint len = strlen(str);
+    GLint i;
     
     glPushMatrix();
-    glTranslatef( x, _winHeight-y, z );
-    glScalef( .001f * scale, .001f * scale, .001f * scale );
+    glTranslatef(x, _winHeight-y, z);
+    glScalef(.001f*scale, .001f*scale, .001f*scale);
     
-    for( i = 0; i < len; i++ )
-        glutStrokeCharacter( GLUT_STROKE_MONO_ROMAN, str[i] );
+    for(i = 0; i < len; i++)
+        glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, str[i]);
     
     glPopMatrix();
 }
 
-
 //-----------------------------------------------------------------------------
 // Show usage on screen.  TODO:  add usage info 
 //-----------------------------------------------------------------------------
-void printUsage(){
+void
+printUsage()
+{
     float smallSize = 0.03f;
     float mediumSize = 0.04f;
     float usageLineWidth = _style->getUsageLineWidth();
     glLineWidth(usageLineWidth);
     
-    float theA = 0.6f + 0.2*sin(0.8*PI*GTime::instance().sec);
+    float a = 0.6f + 0.2*sin(0.8*PI*GTime::instance()._sec);
 
     float colCoeffA[4];
     _style->getUsageAColorCoeff(colCoeffA);
-    glColor4f(theA*colCoeffA[0],theA*colCoeffA[1],
-              theA*colCoeffA[2],theA*colCoeffA[3]);
-    draw_string(_winWidth/2.0f + 0.2f*(float)_winWidth,(float)_winHeight/2.0f, 0.5f,"BORDERLANDS",(float)_winWidth*0.1f);
+    glColor4f(a*colCoeffA[0], a*colCoeffA[1],
+              a*colCoeffA[2], a*colCoeffA[3]);
+    draw_string(_winWidth/2.0f + 0.2f*(float)_winWidth,
+                (float)_winHeight/2.0f,
+                0.5f,
+                "BORDERLANDS",
+                (float)_winWidth*0.1f);
    
-    theA = 0.6f + 0.2*sin(0.9*PI*GTime::instance().sec);
-    float insColor = theA*0.4f;
+    a = 0.6f + 0.2*sin(0.9*PI*GTime::instance()._sec);
+    float insColor = a*0.4f;
 
     float colCoeffIns[4];
     _style->getUsageInsColorCoeff(colCoeffIns);
-    glColor4f(insColor*colCoeffIns[0],insColor*colCoeffIns[1],
-              insColor*colCoeffIns[2],theA*colCoeffIns[3]);
-    //key info
-    draw_string(_winWidth/2.0f + 0.2f*(float)_winWidth + 10.0,(float)_winHeight/2.0f + 30.0, 0.5f,"CLICK TO START",(float)_winWidth*0.04f);
+    glColor4f(insColor*colCoeffIns[0],
+              insColor*colCoeffIns[1],
+              insColor*colCoeffIns[2],
+              a*colCoeffIns[3]);
+    // key info
+    draw_string(_winWidth/2.0f + 0.2f*(float)_winWidth + 10.0,
+                (float)_winHeight/2.0f + 30.0, 0.5f,"CLICK TO START",
+                (float)_winWidth*0.04f);
 
-    theA = 0.6f + 0.2*sin(1.0*PI*GTime::instance().sec);
-    insColor = theA*0.4f;
-    glColor4f(insColor*colCoeffIns[0],insColor*colCoeffIns[1],
-              insColor*colCoeffIns[2],theA*colCoeffIns[3]);
+    a = 0.6f + 0.2*sin(1.0*PI*GTime::instance()._sec);
+    insColor = a*0.4f;
+    glColor4f(insColor*colCoeffIns[0], insColor*colCoeffIns[1],
+              insColor*colCoeffIns[2], a*colCoeffIns[3]);
     
-    //key info
-    draw_string(_winWidth/2.0f + 0.2f*(float)_winWidth+10.0,(float)_winHeight/2.0f + 50.0, 0.5f,"ESCAPE TO QUIT",(float)_winWidth*0.04f);
+    // key info
+    draw_string(_winWidth/2.0f + 0.2f*(float)_winWidth+10.0,
+                (float)_winHeight/2.0f + 50.0, 0.5f,
+                "ESCAPE TO QUIT",
+                (float)_winWidth*0.04f);
     
 }
 
 //-----------------------------------------------------------------------------
 // Show all the commands and keys on screen.
 //-----------------------------------------------------------------------------
-void printManual(){
+void
+printManual()
+{
     float smallSize = 0.03f;
     float mediumSize = 0.04f;
 
     float manualLineWidth = _style->getManualLineWidth();
     glLineWidth(manualLineWidth);
-    
-    //float theA = 0.6f + 0.2*sin(0.9*PI*GTime::instance().sec);
-    //float insColor = 0.8;
 
     float insColor[4];
     _style->getManualInsColor(insColor);
-    glColor4f(insColor[0],insColor[1],insColor[2],insColor[3]);
+    glColor4f(insColor[0], insColor[1],
+              insColor[2], insColor[3]);
 
     char *commands[] =
         {
@@ -697,14 +748,10 @@ void printManual(){
             "Y key            Enable mouse control of Y extent of grain position randomness"
         };
             
-
-    //float x = _winWidth/2.0f - 0.2f*(float)_winWidth;
-    //float y = (float)_winHeight/2.0f - 0.2*(float)_winHeight;
     float x = (float)_winWidth*0.1;
     float y = (float)_winHeight*0.1;
     
     float yStep = (float)_winWidth*0.01f;
-    //float size = (float)_winWidth*0.04f;
     float size = (float)_winWidth*0.06f;
     
     for (int i = 0; i < sizeof(commands)/sizeof(char *); i++)
@@ -715,417 +762,529 @@ void printManual(){
     }
 }
 
-void printParam(){
-    if ((numClouds > 0) && (selectedCloud >=0)){
-        GrainClusterVis * theCloudVis= grainCloudVis->at(selectedCloud);
-        GrainCluster * theCloud = grainCloud->at(selectedCloud);
-        float cloudX = theCloudVis->getX();
-        float cloudY = theCloudVis->getY();
-        string myValue;
+void
+printParam()
+{
+    if ((_numClouds > 0) && (_selectedCloud >=0))
+    {
+        GrainClusterVis *cloudVis= _grainCloudVis->at(_selectedCloud);
+        GrainCluster *cloud = _grainCloud->at(_selectedCloud);
+        float cloudX = cloudVis->getX();
+        float cloudY = cloudVis->getY();
+        string value;
         ostringstream sinput;
         ostringstream sinput2;
-        float theA = 0.7f + 0.3*sin(1.6*PI*GTime::instance().sec);
+        float a = 0.7f + 0.3*sin(1.6*PI*GTime::instance()._sec);
 
         float paramColor[4];
         _style->getParamColor(paramColor);
         glColor4f(paramColor[0],paramColor[1],
-                  paramColor[2],theA*paramColor[3]);
+                  paramColor[2],a*paramColor[3]);
         
-        switch (currentParam) {
+        switch (_currentParam)
+        {
             case NUMGRAINS:
-                myValue = "Voices: ";
-                sinput << theCloud->getNumVoices();            
-                myValue = myValue+ sinput.str();
-                draw_string((GLfloat)mouseX,(GLfloat) (_winHeight-mouseY),0.0,myValue.c_str(),100.0f);
+                value = "Voices: ";
+                sinput << cloud->getNumVoices();            
+                value = value+ sinput.str();
+                draw_string((GLfloat)_mouseX,
+                            (GLfloat)(_winHeight-_mouseY),
+                            0.0,
+                            value.c_str(),
+                            100.0f);
                 break;
+                
             case DURATION:
-                myValue = "Duration: ";
-                if (paramString == ""){
-                    sinput << theCloud->getDurationMs();
-                    myValue = myValue + sinput.str() + " ms";
-                }else{
-                    myValue = myValue + paramString + " ms";
+                value = "Duration: ";
+                if (_paramString == "")
+                {
+                    sinput << cloud->getDurationMs();
+                    value = value + sinput.str() + " ms";
                 }
-                draw_string((GLfloat)mouseX,(GLfloat) (_winHeight-mouseY),0.0,myValue.c_str(),100.0f);
-                //            myValue = "Duration (ms): " + theCloud->getDurationMs();
+                else
+                {
+                    value = value + _paramString + " ms";
+                }
+                
+                draw_string((GLfloat)_mouseX,
+                            (GLfloat)(_winHeight-_mouseY),
+                            0.0,
+                            value.c_str(),
+                            100.0f);
+                // value = "Duration (ms): " + cloud->getDurationMs();
                 break;
+                
             case WINDOW:
-                switch (theCloud->getWindowType()) {
+                switch (cloud->getWindowType())
+                {
                     case HANNING:
-                        myValue = "Window: HANNING";
+                        value = "Window: HANNING";
                         break;
+                        
                     case TRIANGLE:
-                        myValue = "Window: TRIANGLE";
+                        value = "Window: TRIANGLE";
                         break;
+                        
                     case REXPDEC:
-                        myValue = "Window: REXPDEC";
+                        value = "Window: REXPDEC";
                         break;
+                        
                     case EXPDEC:
-                        myValue = "Window: EXPDEC";
+                        value = "Window: EXPDEC";
                         break;
+                        
                     case SINC:
-                        myValue = "Window: SINC";
+                        value = "Window: SINC";
                         break;
+                        
                     case RANDOM_WIN:
-                        myValue = "Window: RANDOM_WIN";
+                        value = "Window: RANDOM_WIN";
                         break;
+                        
                     default:
-                        myValue = "";
+                        value = "";
                         break;
                 }
                 
-                draw_string((GLfloat)mouseX,(GLfloat) (_winHeight-mouseY),0.0,myValue.c_str(),100.0f);
+                draw_string((GLfloat)_mouseX,
+                            (GLfloat)(_winHeight-_mouseY),
+                            0.0,
+                            value.c_str(),
+                            100.0f);
                 break;
+                
             case MOTIONX:
-                myValue = "X: ";
-                sinput << theCloudVis->getXRandExtent();
-                myValue = myValue + sinput.str();
-                draw_string((GLfloat)mouseX,(GLfloat) (_winHeight-mouseY),0.0,myValue.c_str(),100.0f);
+                value = "X: ";
+                sinput << cloudVis->getXRandExtent();
+                value = value + sinput.str();
+                draw_string((GLfloat)_mouseX,
+                            (GLfloat)(_winHeight-_mouseY),
+                            0.0,
+                            value.c_str(),
+                            100.0f);
                 break;
+                
             case MOTIONY:
-                myValue = "Y: ";
-                sinput << theCloudVis->getYRandExtent();
-                myValue = myValue + sinput.str();
-                draw_string((GLfloat)mouseX,(GLfloat) (_winHeight-mouseY),0.0,myValue.c_str(),100.0f);
+                value = "Y: ";
+                sinput << cloudVis->getYRandExtent();
+                value = value + sinput.str();
+                draw_string((GLfloat)_mouseX,
+                            (GLfloat)(_winHeight-_mouseY),
+                            0.0,
+                            value.c_str(),
+                            100.0f);
                 break;
+                
             case MOTIONXY:
-                myValue = "X,Y: ";
-                sinput << theCloudVis->getXRandExtent();
-                myValue = myValue + sinput.str() + ", ";
-                sinput2 << theCloudVis->getYRandExtent();
-                myValue = myValue + sinput2.str();
-                draw_string((GLfloat)mouseX,(GLfloat) (_winHeight-mouseY),0.0,myValue.c_str(),100.0f);
+                value = "X,Y: ";
+                sinput << cloudVis->getXRandExtent();
+                value = value + sinput.str() + ", ";
+                sinput2 << cloudVis->getYRandExtent();
+                value = value + sinput2.str();
+                draw_string((GLfloat)_mouseX,
+                            (GLfloat)(_winHeight-_mouseY),
+                            0.0,
+                            value.c_str(),
+                            100.0f);
                 break;
                 
             case DIRECTION:
-                switch(theCloud->getDirection()){
+                switch(cloud->getDirection())
+                {
                     case FORWARD:
-                        myValue = "Direction: FORWARD";
+                        value = "Direction: FORWARD";
                         break;
+                        
                     case BACKWARD:
-                        myValue = "Direction: BACKWARD";
+                        value = "Direction: BACKWARD";
                         break;
+                        
                     case RANDOM_DIR:
-                        myValue = "Direction: RANDOM";
+                        value = "Direction: RANDOM";
                         break;
+                        
                     default:
-                        myValue = "";
+                        value = "";
                         break;
                 }
-                draw_string((GLfloat)mouseX,(GLfloat) (_winHeight-mouseY),0.0,myValue.c_str(),100.0f);  
+                draw_string((GLfloat)_mouseX,
+                            (GLfloat)(_winHeight-_mouseY),
+                            0.0,
+                            value.c_str(),
+                            100.0f);  
                 break;
                 
             case SPATIALIZE:
-                switch(theCloud->getSpatialMode()){
+                switch(cloud->getSpatialMode())
+                {
                     case UNITY:
-                        myValue = "Spatial Mode: UNITY";
+                        value = "Spatial Mode: UNITY";
                         break;
+                        
                     case STEREO:
-                        myValue = "Spatial Mode: STEREO";
+                        value = "Spatial Mode: STEREO";
                         break;
+                        
                     case AROUND:
-                        myValue = "Spatial Mode: AROUND";
+                        value = "Spatial Mode: AROUND";
                         break;
+                        
                     default:
-                        myValue = "";
+                        value = "";
                         break;
                 }
-                draw_string((GLfloat)mouseX,(GLfloat) (_winHeight-mouseY),0.0,myValue.c_str(),100.0f);  
+                draw_string((GLfloat)_mouseX,
+                            (GLfloat)(_winHeight-_mouseY),
+                            0.0,
+                            value.c_str(),
+                            100.0f);  
                 break;
+                
             case VOLUME:
-                myValue = "Volume (dB): ";
-                if (paramString == ""){
-                    sinput << theCloud->getVolumeDb();
-                    myValue = myValue + sinput.str();
-                }else{
-                    myValue = myValue + paramString;
+                value = "Volume (dB): ";
+                if (_paramString == "")
+                {
+                    sinput << cloud->getVolumeDb();
+                    value = value + sinput.str();
                 }
-                draw_string((GLfloat)mouseX,(GLfloat) (_winHeight-mouseY),0.0,myValue.c_str(),100.0f);
+                else
+                {
+                    value = value + _paramString;
+                }
+                draw_string((GLfloat)_mouseX,
+                            (GLfloat)(_winHeight-_mouseY),
+                            0.0,
+                            value.c_str(),
+                            100.0f);
                 break;
+                
             case OVERLAP:
-                myValue = "Overlap: ";
-                if (paramString == ""){
-                    sinput << theCloud->getOverlap();
-                    myValue = myValue + sinput.str();
-                }else{
-                    myValue = myValue + paramString;
+                value = "Overlap: ";
+                if (_paramString == "")
+                {
+                    sinput << cloud->getOverlap();
+                    value = value + sinput.str();
                 }
-                draw_string((GLfloat)mouseX,(GLfloat) (_winHeight-mouseY),0.0,myValue.c_str(),100.0f);
-                //            myValue = "Duration (ms): " + theCloud->getDurationMs();
+                else
+                {
+                    value = value + _paramString;
+                }
+                draw_string((GLfloat)_mouseX,
+                            (GLfloat)(_winHeight-_mouseY),
+                            0.0,
+                            value.c_str(),
+                            100.0f);
+                // value = "Duration (ms): " + cloud->getDurationMs();
                 break;
+                
             case PITCH:
-                myValue = "Pitch: ";
-                if (paramString == ""){
-                    sinput << theCloud->getPitch();
-                    myValue = myValue + sinput.str();
-                }else{
-                    myValue = myValue + paramString;
+                value = "Pitch: ";
+                if (_paramString == "")
+                {
+                    sinput << cloud->getPitch();
+                    value = value + sinput.str();
                 }
-                draw_string((GLfloat)mouseX,(GLfloat) (_winHeight-mouseY),0.0,myValue.c_str(),100.0f);
-                //            myValue = "Duration (ms): " + theCloud->getDurationMs();
+                else
+                {
+                    value = value + _paramString;
+                }
+                draw_string((GLfloat)_mouseX,
+                            (GLfloat)(_winHeight-_mouseY),
+                            0.0,
+                            value.c_str(),
+                            100.0f);
+                // value = "Duration (ms): " + cloud->getDurationMs();
                 break;
                 
             case P_LFO_FREQ:
-                myValue = "Pitch LFO Freq: ";
-                if (paramString == ""){
-                    sinput << theCloud->getPitchLFOFreq();
-                    myValue = myValue + sinput.str();
-                }else{
-                    myValue = myValue + paramString;
+                value = "Pitch LFO Freq: ";
+                if (_paramString == "")
+                {
+                    sinput << cloud->getPitchLFOFreq();
+                    value = value + sinput.str();
                 }
-                draw_string((GLfloat)mouseX,(GLfloat) (_winHeight-mouseY),0.0,myValue.c_str(),100.0f);
-                //            myValue = "Duration (ms): " + theCloud->getDurationMs();
+                else
+                {
+                    value = value + _paramString;
+                }
+                draw_string((GLfloat)_mouseX,
+                            (GLfloat)(_winHeight-_mouseY),
+                            0.0,
+                            value.c_str(),
+                            100.0f);
+                // value = "Duration (ms): " + cloud->getDurationMs();
                 break;
+                
             case P_LFO_AMT:
-                myValue = "Pitch LFO Amount: ";
-                if (paramString == ""){
-                    sinput << theCloud->getPitchLFOAmount();
-                    myValue = myValue + sinput.str();
-                }else{
-                    myValue = myValue + paramString;
+                value = "Pitch LFO Amount: ";
+                if (_paramString == "")
+                {
+                    sinput << cloud->getPitchLFOAmount();
+                    value = value + sinput.str();
                 }
-                draw_string((GLfloat)mouseX,(GLfloat) (_winHeight-mouseY),0.0,myValue.c_str(),100.0f);
-                //            myValue = "Duration (ms): " + theCloud->getDurationMs();
+                else
+                {
+                    value = value + _paramString;
+                }
+                draw_string((GLfloat)_mouseX,
+                            (GLfloat)(_winHeight-_mouseY),
+                            0.0,
+                            value.c_str(),
+                            100.0f);
+                // value = "Duration (ms): " + cloud->getDurationMs();
                 break;
+                
             default:
                 break;
         }
     }
-    
 }
-
 
 //================================================================================
 //   INTERACTION/GLUT
 //================================================================================
 
 
-//update mouse coords based on mousemovement
-void updateMouseCoords(int x, int y){
-    mouseX = x+position.x;
-    mouseY = (_winHeight - (y-position.y) );
+// update mouse coords based on mousemovement
+void
+updateMouseCoords(int x, int y)
+{
+    _mouseX = x + _position.x;
+    _mouseY = (_winHeight - (y-_position.y));
 }
-
 
 //-----------------------------------------------------------------------------
 // Handle special function keys (arrows, etc)
 //-----------------------------------------------------------------------------
-void specialFunc( int key, int x, int y )
+void
+specialFunc(int key, int x, int y)
 {
-    static float sidewaysMoveSpeed = 10.0f;
-    static float upDownMoveSpeed = 10.0f;
-    //cout << "special key" << key <<endl;
+    // cout << "special key" << key <<endl;
     
-    switch (key){
+    switch (key)
+    {
         case GLUT_KEY_LEFT:
-            //move to the left
-            position.x -=  sidewaysMoveSpeed;
-            mouseX -=sidewaysMoveSpeed;
+            // move to the left
+            _position.x -=  _sidewaysMoveSpeed;
+            _mouseX -=_sidewaysMoveSpeed;
             break;
-        case GLUT_KEY_RIGHT:
-            //move to the right
-            position.x += sidewaysMoveSpeed;
-            mouseX +=sidewaysMoveSpeed;
-            break;
-        case GLUT_KEY_DOWN:
-            //move backward
-            position.y -= upDownMoveSpeed;
-            mouseY +=sidewaysMoveSpeed;
             
+        case GLUT_KEY_RIGHT:
+            // move to the right
+            _position.x += _sidewaysMoveSpeed;
+            _mouseX +=_sidewaysMoveSpeed;
             break;
+            
+        case GLUT_KEY_DOWN:
+            // move backward
+            _position.y -= _upDownMoveSpeed;
+            _mouseY +=_sidewaysMoveSpeed;
+            break;
+            
         case GLUT_KEY_UP:
-            //move forward
-            position.y += upDownMoveSpeed;
-            mouseY -=sidewaysMoveSpeed;
+            // move forward
+            _position.y += _upDownMoveSpeed;
+            _mouseY -=_sidewaysMoveSpeed;
             break;
             
         case 14:
-            //cout << "shift down" << endl;
+            // cout << "shift down" << endl;
             break;
-        case 15://shift in
-            //cout << "shift up" << endl;
             
+        case 15://shift in
+            // cout << "shift up" << endl;
             break;
             
         default:
             break;
     }
-    //request redisplay
-    glutPostRedisplay( );
+    // request redisplay
+    glutPostRedisplay();
 }
-
-
-
 
 //-----------------------------------------------------------------------------
 // Handle key up events (other than special keys)
 //-----------------------------------------------------------------------------
-
-void keyUpFunc( unsigned char key, int x, int y ){
-    //cout << key << endl;
-    switch (key) {
+void
+keyUpFunc(unsigned char key, int x, int y)
+{
+    // cout << key << endl;
+    switch (key)
+    {
         case 'a':
             break;
+            
         case 'R':
         case 'r':
-            dragMode = MOVE;
-            lastDragX = veryHighNumber;
-            lastDragY = veryHighNumber;
+            _dragMode = MOVE;
+            _lastDragX = _veryHighNumber;
+            _lastDragY = _veryHighNumber;
             break;
+            
         default:
             break;
     }
-    glutPostRedisplay( );
+    
+    glutPostRedisplay();
 }
-
 
 //-----------------------------------------------------------------------------
 // Handle key down events (other than special keys)
 //-----------------------------------------------------------------------------
-void keyboardFunc( unsigned char key, int x, int y )
+void
+keyboardFunc(unsigned char key, int x, int y)
 {
-    static bool negativeFlag = false;//for negative value entry
     int modkey = glutGetModifiers();
-    //cout << "key pressed " << key << endl;
-    switch( key )
+    // cout << "key pressed " << key << endl;
+    
+    switch(key)
     {
-        
-        case 9: //tab key
+        case 9: // tab key       
+            if (_selectionIndices->size() > 1)
+            {
+                _soundViews->at(_selectedRect)->setSelectState(false);
+                _selectionIndex++;
+                if (_selectionIndex >= _selectionIndices->size())
+                    _selectionIndex = 0;
+                
+                _selectedRect = _selectionIndices->at(_selectionIndex);
+                _soundViews->at(_selectedRect)->setSelectState(true);
+            }
+            break;
             
-            if (selectionIndices->size() > 1){
-                soundViews->at(selectedRect)->setSelectState(false);
-                selectionIndex++;
-                if (selectionIndex >= selectionIndices->size()){
-                    selectionIndex = 0;
-                }
-                selectedRect = selectionIndices->at(selectionIndex);
-                soundViews->at(selectedRect)->setSelectState(true);
-            }
-            break;
         case '1':
-            paramString.push_back('1');
-            if (currentParam == WINDOW){
-                    if (selectedCloud >=0){
-                        grainCloud->at(selectedCloud)->setWindowType(0);
-                    }
+            _paramString.push_back('1');
+            if (_currentParam == WINDOW)
+            {
+                if (_selectedCloud >=0)
+                    _grainCloud->at(_selectedCloud)->setWindowType(0);
             }
-
             break;
+            
         case '2':
-            paramString.push_back('2');
-            if (currentParam == WINDOW){
-                if (selectedCloud >=0){
-                    grainCloud->at(selectedCloud)->setWindowType(1);
-                }
+            _paramString.push_back('2');
+            if (_currentParam == WINDOW)
+            {
+                if (_selectedCloud >=0)
+                    _grainCloud->at(_selectedCloud)->setWindowType(1);
             }
             break;
+            
         case '3':
-            paramString.push_back('3');
-            if (currentParam == WINDOW){
-                if (selectedCloud >=0){
-                    grainCloud->at(selectedCloud)->setWindowType(2);
-                }
+            _paramString.push_back('3');
+            if (_currentParam == WINDOW)
+            {
+                if (_selectedCloud >=0)
+                    _grainCloud->at(_selectedCloud)->setWindowType(2);
             }
             break;
             
         case '4':
-            paramString.push_back('4');
-            if (currentParam == WINDOW){
-                if (selectedCloud >=0){
-                    grainCloud->at(selectedCloud)->setWindowType(3);
-                }
+            _paramString.push_back('4');
+            if (_currentParam == WINDOW)
+            {
+                if (_selectedCloud >=0)
+                    _grainCloud->at(_selectedCloud)->setWindowType(3);
             }
-            break;
-        case'5':
-            paramString.push_back('5');
-            if (currentParam == WINDOW){
-                if (selectedCloud >=0){
-                    grainCloud->at(selectedCloud)->setWindowType(4);
-                }
-            }
-            break;
-        case'6':
-            paramString.push_back('6');
-            if (currentParam == WINDOW){
-                if (selectedCloud >=0){
-                    grainCloud->at(selectedCloud)->setWindowType(5);
-                }
-            }
-            break;
-        case'7':
-            paramString.push_back('7');
-            break;
-        case'8':
-            paramString.push_back('8');
-            break;
-        case'9':
-            paramString.push_back('9');
-            break;
-        case '0':
-            paramString.push_back('0');
-            break;
-        case '.':
-            paramString.push_back('.');            
             break;
             
-        case 13://enter key - for saving param string
-            if (paramString != ""){
-                float value = atof(paramString.c_str());
+        case'5':
+            _paramString.push_back('5');
+            if (_currentParam == WINDOW)
+            {
+                if (_selectedCloud >=0)
+                    _grainCloud->at(_selectedCloud)->setWindowType(4);
+            }
+            break;
+            
+        case'6':
+            _paramString.push_back('6');
+            if (_currentParam == WINDOW)
+            {
+                if (_selectedCloud >=0)
+                    _grainCloud->at(_selectedCloud)->setWindowType(5);
+            }
+            break;
+            
+        case'7':
+            _paramString.push_back('7');
+            break;
+
+        case'8':
+            _paramString.push_back('8');
+            break;
+
+        case'9':
+            _paramString.push_back('9');
+            break;
+
+        case '0':
+            _paramString.push_back('0');
+            break;
+
+        case '.':
+            _paramString.push_back('.');            
+            break;
+            
+        case 13: // enter key - for saving param string
+            if (_paramString != "")
+            {
+                float value = atof(_paramString.c_str());
                 
-                //cout << "value received " << value << endl;
-                switch (currentParam){
+                // cout << "value received " << value << endl;
+                switch (_currentParam)
+                {
                     case DURATION:
-                        if (selectedCloud >=0){
-                            if (value < 1.0){
+                        if (_selectedCloud >=0)
+                        {
+                            if (value < 1.0)
                                 value = 1.0;
-                            }
-                            grainCloud->at(selectedCloud)->setDurationMs(value);
-                        }
-                        break;
-                    case OVERLAP:
-                        if (selectedCloud >=0){
-                            grainCloud->at(selectedCloud)->setOverlap(value);
-                        }
-                        break;
-                    case PITCH:
-                        if (selectedCloud >=0){
-                            grainCloud->at(selectedCloud)->setPitch(value);
-                        }
-                        break;
-                    case P_LFO_FREQ:
-                        if (selectedCloud >=0){
-                            grainCloud->at(selectedCloud)->setPitchLFOFreq(value);
-                        }
-                        break;
-                    case P_LFO_AMT:
-                        if (selectedCloud >=0){
-                            grainCloud->at(selectedCloud)->setPitchLFOAmount(value);
+                            
+                            _grainCloud->at(_selectedCloud)->setDurationMs(value);
                         }
                         break;
                         
+                    case OVERLAP:
+                        if (_selectedCloud >=0)
+                            _grainCloud->at(_selectedCloud)->setOverlap(value);
+                        break;
+                        
+                    case PITCH:
+                        if (_selectedCloud >=0)
+                            _grainCloud->at(_selectedCloud)->setPitch(value);
+                        break;
+                        
+                    case P_LFO_FREQ:
+                        if (_selectedCloud >=0)
+                            _grainCloud->at(_selectedCloud)->setPitchLFOFreq(value);
+                        break;
+                        
+                    case P_LFO_AMT:
+                        if (_selectedCloud >=0)
+                            _grainCloud->at(_selectedCloud)->setPitchLFOAmount(value);
+                        break;
+                        
                     case VOLUME:
-                        if (selectedCloud >=0){
-                            grainCloud->at(selectedCloud)->setVolumeDb(value);
-                        }
+                        if (_selectedCloud >=0)
+                            _grainCloud->at(_selectedCloud)->setVolumeDb(value);
+                        
                     default:
                         break;
                 }
-                paramString = "";
+                
+                _paramString = "";
             }
-           // cout << "enter key caught" << endl;
+            // cout << "enter key caught" << endl;
             break;
             
-            
-            
-            
-        case 27: //esc key
+        case 27: // esc key
             cleaningFunction();
             exit(1);
             break;
             
-        case 'Q'://spatialization
+        case 'Q':// spatialization
         case 'q':  
-                      break;
+            break;
             
         case 'O':
         case 'o':
@@ -1134,205 +1293,272 @@ void keyboardFunc( unsigned char key, int x, int y )
             
         case 'T':
         case 't':
-            paramString = "";
-            if (selectedCloud >=0){
-                if (currentParam != SPATIALIZE){
-                    currentParam = SPATIALIZE;
-                }else{
-                    if (modkey == GLUT_ACTIVE_SHIFT){
-                        if (selectedCloud >=0){
-                            int theSpat = grainCloud->at(selectedCloud)->getSpatialMode();
-                            grainCloud->at(selectedCloud)->setSpatialMode(theSpat - 1,-1);
+            _paramString = "";
+            if (_selectedCloud >=0)
+            {
+                if (_currentParam != SPATIALIZE)
+                    _currentParam = SPATIALIZE;
+                else
+                {
+                    if (modkey == GLUT_ACTIVE_SHIFT)
+                    {
+                        if (_selectedCloud >=0)
+                        {
+                            int spat = _grainCloud->at(_selectedCloud)->
+                                getSpatialMode();
+                            _grainCloud->at(_selectedCloud)->
+                                setSpatialMode(spat - 1,-1);
                             
                         }
-                    }else{
-                        if (selectedCloud >=0){
-                            int theSpat = grainCloud->at(selectedCloud)->getSpatialMode();
-                            grainCloud->at(selectedCloud)->setSpatialMode(theSpat + 1,-1);
+                    }
+                    else
+                    {
+                        if (_selectedCloud >=0)
+                        {
+                            int spat = _grainCloud->at(_selectedCloud)->
+                                getSpatialMode();
+                            _grainCloud->at(_selectedCloud)->
+                                setSpatialMode(spat + 1, -1);
                         }
                     }
                 }
             }
             break;
             
-        case 'S'://overlap control 
+        case 'S': // overlap control 
         case 's':
-            paramString = "";
-            if (currentParam != OVERLAP){
-                currentParam = OVERLAP;
-            }else{
-                if (modkey == GLUT_ACTIVE_SHIFT){
-                    if (selectedCloud >=0){
-                        float theOver =  grainCloud->at(selectedCloud)->getOverlap();
-                        grainCloud->at(selectedCloud)->setOverlap(theOver - 0.01f);
+            _paramString = "";
+            if (_currentParam != OVERLAP)
+                _currentParam = OVERLAP;
+            else
+            {
+                if (modkey == GLUT_ACTIVE_SHIFT)
+                {
+                    if (_selectedCloud >=0)
+                    {
+                        float overlap =  _grainCloud->at(_selectedCloud)->
+                            getOverlap();
+                        _grainCloud->at(_selectedCloud)->setOverlap(overlap - 0.01f);
                     }
-                }else{
-                    if (selectedCloud >=0){
-                        float theOver =  grainCloud->at(selectedCloud)->getOverlap();
-                        grainCloud->at(selectedCloud)->setOverlap(theOver + 0.01f);
+                }
+                else
+                {
+                    if (_selectedCloud >=0)
+                    {
+                        float overlap =  _grainCloud->at(_selectedCloud)->
+                            getOverlap();
+                        _grainCloud->at(_selectedCloud)->setOverlap(overlap + 0.01f);
                     }
                 }
             }
             break;
+            
         case 'R':
         case 'r':
-            if (selectedCloud >=0){
-                currentParam = MOTIONXY;
-            }
-            //toggle selection modes
-            dragMode = RESIZE;
+            if (_selectedCloud >=0)
+                _currentParam = MOTIONXY;
+            // toggle selection modes
+            _dragMode = RESIZE;
             break;
-        case 'F'://direction
+            
+        case 'F': // direction
         case 'f':
-            paramString = "";
-            if (selectedCloud >=0){
-                if (currentParam != DIRECTION){
-                    currentParam = DIRECTION;
-                }else{
-                    if (modkey == GLUT_ACTIVE_SHIFT){
-                        if (selectedCloud >=0){
-                            int theDir = grainCloud->at(selectedCloud)->getDirection();
-                            grainCloud->at(selectedCloud)->setDirection(theDir - 1);
+            _paramString = "";
+            if (_selectedCloud >=0)
+            {
+                if (_currentParam != DIRECTION)
+                    _currentParam = DIRECTION;
+                else
+                {
+                    if (modkey == GLUT_ACTIVE_SHIFT)
+                    {
+                        if (_selectedCloud >=0)
+                        {
+                            int dir = _grainCloud->at(_selectedCloud)->
+                                getDirection();
+                            _grainCloud->at(_selectedCloud)->
+                                setDirection(dir - 1);
                             
                         }
-                    }else{
-                        if (selectedCloud >=0){
-                            int theDir = grainCloud->at(selectedCloud)->getDirection();
-                            grainCloud->at(selectedCloud)->setDirection(theDir + 1);
+                    }
+                    else
+                    {
+                        if (_selectedCloud >=0)
+                        {
+                            int dir = _grainCloud->at(_selectedCloud)->
+                                getDirection();
+                            _grainCloud->at(_selectedCloud)->
+                                setDirection(dir + 1);
                         }
-                    }
-                }
-            }
-            if (selectedRect >=0){
-                soundViews->at(selectedRect)->toggleOrientation();
-            }
-            //cerr << "Looking from the front" << endl;
-            break;
-        case 'P'://waveform display on/off
-        case 'p':
-
-//            for (int i = 0; i < soundViews->size();i++){
-//                soundViews->at(i)->toggleWaveDisplay();
-//            }
-            break;
-        case 'W'://window editing for grain
-        case 'w':
-            paramString = "";
-            if (currentParam != WINDOW){
-                currentParam = WINDOW;
-            }else{
-                if (modkey == GLUT_ACTIVE_SHIFT){
-                    if (selectedCloud >=0){
-                        int theWin = grainCloud->at(selectedCloud)->getWindowType();
-                        grainCloud->at(selectedCloud)->setWindowType(theWin - 1);
-
-                    }
-                }else{
-                    if (selectedCloud >=0){
-                        int theWin = grainCloud->at(selectedCloud)->getWindowType();
-                        grainCloud->at(selectedCloud)->setWindowType(theWin + 1);
                     }
                 }
             }
             
+            if (_selectedRect >=0)
+                _soundViews->at(_selectedRect)->toggleOrientation();
+            
+            // cerr << "Looking from the front" << endl;
+            break;
+            
+        case 'P': // waveform display on/off
+        case 'p':
+            // for (int i = 0; i < _soundViews->size();i++){
+            //     _soundViews->at(i)->toggleWaveDisplay();
+            // }
+            break;
+            
+        case 'W': // window editing for grain
+        case 'w':
+            _paramString = "";
+            if (_currentParam != WINDOW)
+                _currentParam = WINDOW;
+            else
+            {
+                if (modkey == GLUT_ACTIVE_SHIFT)
+                {
+                    if (_selectedCloud >=0)
+                    {
+                        int win = _grainCloud->at(_selectedCloud)->
+                            getWindowType();
+                        _grainCloud->at(_selectedCloud)->setWindowType(win - 1);
+                    }
+                }
+                else
+                {
+                    if (_selectedCloud >=0)
+                    {
+                        int win = _grainCloud->at(_selectedCloud)->
+                            getWindowType();
+                        _grainCloud->at(_selectedCloud)->
+                            setWindowType(win + 1);
+                    }
+                }
+            }
             break;
             
         case 'B':
         case 'b':
-            //cloud volume
-            paramString = "";
-            if (currentParam != VOLUME){
-                currentParam = VOLUME;
-            }else{
-                if (modkey == GLUT_ACTIVE_SHIFT){
-                    if (selectedCloud >=0){
-                        float theVol = grainCloud->at(selectedCloud)->getVolumeDb();
-                        grainCloud->at(selectedCloud)->setVolumeDb(theVol - 0.5f);
+            // cloud volume
+            _paramString = "";
+            if (_currentParam != VOLUME)
+                _currentParam = VOLUME;
+            else
+            {
+                if (modkey == GLUT_ACTIVE_SHIFT)
+                {
+                    if (_selectedCloud >=0)
+                    {
+                        float vol = _grainCloud->at(_selectedCloud)->
+                            getVolumeDb();
+                        _grainCloud->at(_selectedCloud)->
+                            setVolumeDb(vol - 0.5f);
                     }
-                }else{
-                    if (selectedCloud >=0){
-                        float theVol = grainCloud->at(selectedCloud)->getVolumeDb();
-                        grainCloud->at(selectedCloud)->setVolumeDb(theVol + 0.5f);
+                }
+                else
+                {
+                    if (_selectedCloud >=0)
+                    {
+                        float vol = _grainCloud->at(_selectedCloud)->
+                            getVolumeDb();
+                        _grainCloud->at(_selectedCloud)->
+                            setVolumeDb(vol + 0.5f);
                     }
                 }
             }
-
-            
             break;
             
-        case '/'://switch to menu view
+        case '/': // switch to menu view
         case '?':
-            menuFlag = !menuFlag;
-        
+            _menuFlag = !_menuFlag;
             break;
+            
         case 'G':
         case 'g':
-            paramString = "";
+            _paramString = "";
             deselect(RECT);
-            if (grainCloud != NULL){
-                if (modkey == GLUT_ACTIVE_SHIFT){
-                    if (grainCloud->size() > 0){
-                        grainCloud->pop_back();
-                        grainCloudVis->pop_back();
-                        numClouds-=1;
-                        //cout << "cloud removed" << endl;
+            if (_grainCloud != NULL)
+            {
+                if (modkey == GLUT_ACTIVE_SHIFT)
+                {
+                    if (_grainCloud->size() > 0)
+                    {
+                        _grainCloud->pop_back();
+                        _grainCloudVis->pop_back();
+                        _numClouds-=1;
+                        // cout << "cloud removed" << endl;
                     }
-                    if (numClouds == 0){
-                        selectedCloud = -1;
-                    }else{
-                        //still have a cloud so select
-                        selectedCloud = numClouds-1;
-                        grainCloudVis->at(selectedCloud)->setSelectState(true);
+                    if (_numClouds == 0)
+                        _selectedCloud = -1;
+                    else
+                    {
+                        // still have a cloud so select
+                        _selectedCloud = _numClouds-1;
+                        _grainCloudVis->at(_selectedCloud)->setSelectState(true);
                     }
-                    break;
                     
-                }else{
-                    int numVoices = 8;//initial number of voices
-                    int idx = grainCloud->size();
-                    if (selectedCloud >=0){
-                        if (numClouds > 0){
-                            grainCloudVis->at(selectedCloud)->setSelectState(false);
-                        }
-                    }
-                    selectedCloud = idx;
-                    //create audio
-                    grainCloud->push_back(new GrainCluster(_style,
-                                                           mySounds,numVoices));
-                    //create visualization
-                    grainCloudVis->
-                        push_back(new GrainClusterVis(_style,
-                                                      _winWidth, _winHeight,
-                                                      mouseX,mouseY,numVoices,soundViews));
-                    //select new cloud
-                    grainCloudVis->at(idx)->setSelectState(true);
-                    //register visualization with audio
-                    grainCloud->at(idx)->registerVis(grainCloudVis->at(idx));
-                    //grainCloud->at(idx)->toggleActive();
-                    numClouds+=1;
+                    break;    
                 }
-                //                        cout << "cloud added" << endl;
-                //grainControl->newCluster(mouseX,mouseY,1);
-            }
-          
-            break;
-        case 'V': //grain voices (add, delete)
-        case 'v':
-            paramString = "";
-            if (currentParam != NUMGRAINS){
-                currentParam = NUMGRAINS;
-            }else{
-                if (modkey == GLUT_ACTIVE_SHIFT){
-                    if (selectedCloud >=0){
-                        if (grainCloud)
-                            grainCloud->at(selectedCloud)->removeGrain();
-                        //cout << "grain removed" << endl;
+                else
+                {
+                    int numVoices = 8; // initial number of voices
+                    int idx = _grainCloud->size();
+                    if (_selectedCloud >=0)
+                    {
+                        if (_numClouds > 0)
+                            _grainCloudVis->at(_selectedCloud)->
+                                setSelectState(false);
                     }
                     
-                }else{
-                    if (selectedCloud >=0){
-                        if (grainCloud)
-                            grainCloud->at(selectedCloud)->addGrain();
-                        //cout << "grain added" << endl;
+                    _selectedCloud = idx;
+
+                    // create audio
+                    _grainCloud->
+                        push_back(new GrainCluster(_style,
+                                                   _sounds,numVoices));
+                    // create visualization
+                    _grainCloudVis->
+                        push_back(new GrainClusterVis(_style,
+                                                      _winWidth,
+                                                      _winHeight,
+                                                      _mouseX,
+                                                      _mouseY,
+                                                      numVoices,
+                                                      _soundViews));
+                    // select new cloud
+                    _grainCloudVis->at(idx)->setSelectState(true);
+                    // register visualization with audio
+                    _grainCloud->at(idx)->registerVis(_grainCloudVis->at(idx));
+                    // _grainCloud->at(idx)->toggleActive();
+                    _numClouds+=1;
+                }
+                // cout << "cloud added" << endl;
+                // grainControl->newCluster(_mouseX,_mouseY,1);
+            }
+            break;
+            
+        case 'V': // grain voices (add, delete)
+        case 'v':
+            _paramString = "";
+            if (_currentParam != NUMGRAINS)
+                _currentParam = NUMGRAINS;
+            else
+            {
+                if (modkey == GLUT_ACTIVE_SHIFT)
+                {
+                    if (_selectedCloud >=0)
+                    {
+                        if (_grainCloud)
+                            _grainCloud->at(_selectedCloud)->removeGrain();
+                        // cout << "grain removed" << endl;
+                    }
+                }
+                else
+                {
+                    if (_selectedCloud >=0)
+                    {
+                        if (_grainCloud)
+                            _grainCloud->at(_selectedCloud)->addGrain();
+                        // cout << "grain added" << endl;
                     }
                 }
             }
@@ -1340,43 +1566,63 @@ void keyboardFunc( unsigned char key, int x, int y )
         
         case 'D':
         case 'd':
-            paramString = "";
-            if (currentParam != DURATION){
-                currentParam = DURATION;
-            }else{
-                if (modkey == GLUT_ACTIVE_SHIFT){
-                    if (selectedCloud >=0){
-                        float theDur = grainCloud->at(selectedCloud)->getDurationMs();
-                        grainCloud->at(selectedCloud)->setDurationMs(theDur - 5.0f);
+            _paramString = "";
+            if (_currentParam != DURATION)
+                _currentParam = DURATION;
+            else
+            {
+                if (modkey == GLUT_ACTIVE_SHIFT)
+                {
+                    if (_selectedCloud >=0)
+                    {
+                        float dur = _grainCloud->at(_selectedCloud)->
+                            getDurationMs();
+                        _grainCloud->at(_selectedCloud)->
+                            setDurationMs(dur - 5.0f);
                     }
-                }else{
-                    if (selectedCloud >=0){
-                        float theDur = grainCloud->at(selectedCloud)->getDurationMs();
-                        grainCloud->at(selectedCloud)->setDurationMs(theDur + 5.0f);
+                }
+                else
+                {
+                    if (_selectedCloud >=0)
+                    {
+                        float dur = _grainCloud->at(_selectedCloud)->
+                            getDurationMs();
+                        _grainCloud->at(_selectedCloud)->
+                            setDurationMs(dur + 5.0f);
                     }
                 }
             }
-            break;    
+            break;
+            
         case 'I':
         case 'i':
             break;
             
-            
         case 'L':
         case 'l':
-            paramString = "";
-            if (currentParam != P_LFO_FREQ){
-                currentParam = P_LFO_FREQ;
-            }else{
-                if (modkey == GLUT_ACTIVE_SHIFT){
-                    if (selectedCloud >=0){
-                        float theLFOFreq = grainCloud->at(selectedCloud)->getPitchLFOFreq();
-                        grainCloud->at(selectedCloud)->setPitchLFOFreq(theLFOFreq - 0.01f);
+            _paramString = "";
+            if (_currentParam != P_LFO_FREQ)
+                _currentParam = P_LFO_FREQ;
+            else
+            {
+                if (modkey == GLUT_ACTIVE_SHIFT)
+                {
+                    if (_selectedCloud >=0)
+                    {
+                        float LFOFreq = _grainCloud->at(_selectedCloud)->
+                            getPitchLFOFreq();
+                        _grainCloud->at(_selectedCloud)->
+                            setPitchLFOFreq(LFOFreq - 0.01f);
                     }
-                }else{
-                    if (selectedCloud >=0){
-                        float theLFOFreq = grainCloud->at(selectedCloud)->getPitchLFOFreq();
-                        grainCloud->at(selectedCloud)->setPitchLFOFreq(theLFOFreq + 0.01f);
+                }
+                else
+                {
+                    if (_selectedCloud >=0)
+                    {
+                        float LFOFreq = _grainCloud->at(_selectedCloud)->
+                            getPitchLFOFreq();
+                        _grainCloud->at(_selectedCloud)->
+                            setPitchLFOFreq(LFOFreq + 0.01f);
                     }
                 }
             }
@@ -1384,60 +1630,80 @@ void keyboardFunc( unsigned char key, int x, int y )
             
         case 'K':
         case 'k':
-            paramString = "";
-            if (currentParam != P_LFO_AMT){
-                currentParam = P_LFO_AMT;
-            }else{
-                if (modkey == GLUT_ACTIVE_SHIFT){
-                    if (selectedCloud >=0){
-                        float theLFOAmt = grainCloud->at(selectedCloud)->getPitchLFOAmount();
-                        grainCloud->at(selectedCloud)->setPitchLFOAmount(theLFOAmt - 0.001f);
+            _paramString = "";
+            if (_currentParam != P_LFO_AMT)
+                _currentParam = P_LFO_AMT;
+            else
+            {
+                if (modkey == GLUT_ACTIVE_SHIFT)
+                {
+                    if (_selectedCloud >=0)
+                    {
+                        float LFOAmt = _grainCloud->at(_selectedCloud)->
+                            getPitchLFOAmount();
+                        _grainCloud->at(_selectedCloud)->
+                            setPitchLFOAmount(LFOAmt - 0.001f);
                     }
-                }else{
-                    if (selectedCloud >=0){
-                        float theLFOAmnt = grainCloud->at(selectedCloud)->getPitchLFOAmount();
-                        grainCloud->at(selectedCloud)->setPitchLFOAmount(theLFOAmnt + 0.001f);
+                }
+                else
+                {
+                    if (_selectedCloud >=0)
+                    {
+                        float LFOAmnt = _grainCloud->at(_selectedCloud)->
+                            getPitchLFOAmount();
+                        _grainCloud->at(_selectedCloud)->
+                            setPitchLFOAmount(LFOAmnt + 0.001f);
                     }
                 }
             }
             break;
+            
         case 'H':
         case 'h':
             break;
-        case ' '://add delete
             
+        case ' ': // add delete
             break;
             
         case 'X':
         case 'x':
-            paramString = "";
-            if (selectedCloud >= 0){
-                currentParam = MOTIONX;
-            }
+            _paramString = "";
+            if (_selectedCloud >= 0)
+                _currentParam = MOTIONX;
             break;
+            
         case 'Y':
         case 'y':
-            paramString = "";
-            if (selectedCloud >= 0){
-                currentParam = MOTIONY;
-            }
+            _paramString = "";
+            if (_selectedCloud >= 0)
+                _currentParam = MOTIONY;
             break;
             
         case 'Z':
         case 'z':
-            paramString = "";
-            if (currentParam != PITCH){
-                currentParam = PITCH;
-            }else{
-                if (modkey == GLUT_ACTIVE_SHIFT){
-                    if (selectedCloud >=0){
-                        float thePitch =  grainCloud->at(selectedCloud)->getPitch();
-                        grainCloud->at(selectedCloud)->setPitch(thePitch - 0.01f);
+            _paramString = "";
+            if (_currentParam != PITCH)
+                _currentParam = PITCH;
+            else
+            {
+                if (modkey == GLUT_ACTIVE_SHIFT)
+                {
+                    if (_selectedCloud >=0)
+                    {
+                        float pitch =  _grainCloud->at(_selectedCloud)->
+                            getPitch();
+                        _grainCloud->at(_selectedCloud)->
+                            setPitch(pitch - 0.01f);
                     }
-                }else{
-                    if (selectedCloud >=0){
-                        float thePitch =  grainCloud->at(selectedCloud)->getPitch();
-                        grainCloud->at(selectedCloud)->setPitch(thePitch + 0.01f);
+                }
+                else
+                {
+                    if (_selectedCloud >=0)
+                    {
+                        float pitch =  _grainCloud->at(_selectedCloud)->
+                            getPitch();
+                        _grainCloud->at(_selectedCloud)->
+                            setPitch(pitch + 0.01f);
                     }
                 }
             }
@@ -1445,213 +1711,248 @@ void keyboardFunc( unsigned char key, int x, int y )
                         
         case '-':
         case '_':
-            paramString.insert(0,"-");
+            _paramString.insert(0, "-");
             break;
-        case 127://delete selected
-            if (paramString == ""){
-                if (selectedCloud >=0){
-                    grainCloud->erase(grainCloud->begin() + selectedCloud);
-                    grainCloudVis->erase(grainCloudVis->begin() + selectedCloud);
-                    selectedCloud = -1;
-                    numClouds-=1;
+            
+        case 127: // delete selected
+            if (_paramString == "")
+            {
+                if (_selectedCloud >=0)
+                {
+                    _grainCloud->erase(_grainCloud->begin() + _selectedCloud);
+                    _grainCloudVis->erase(_grainCloudVis->begin() + _selectedCloud);
+                    _selectedCloud = -1;
+                    _numClouds-=1;
                 }
-            }else{
-                if (paramString.size () > 0)  paramString.resize (paramString.size () - 1);
             }
-                    
+            else
+            {
+                if (_paramString.size () > 0)
+                    _paramString.resize(_paramString.size () - 1);
+            }
             break;
+            
         case 'A':
         case 'a':
-            paramString = "";
-            if (selectedCloud >=0){
-                grainCloud->at(selectedCloud)->toggleActive();
-            }
+            _paramString = "";
+            if (_selectedCloud >=0)
+                _grainCloud->at(_selectedCloud)->toggleActive();
             break;
-        case '=':
-        case '+':
             
-           
-                           
+        case '=':
+        case '+':               
             break;
+            
         case ',':
         case '<':
             break;
+            
         case '>':
             break;
             
         default:
-            //cout << "key pressed " << key << endl;
+            // cout << "key pressed " << key << endl;
             break;
     }
-    glutPostRedisplay( );
+    glutPostRedisplay();
 }
-
 
 //-----------------------------------------------------------------------------
 // Handle mouse clicks, etc.
 //-----------------------------------------------------------------------------
 
-
-//handle deselections
-void deselect(int shapeType){
-    switch (shapeType){
+// handle deselections
+void
+deselect(int shapeType)
+{
+    switch (shapeType)
+    {
         case CLOUD:
-            if (selectedCloud >=0){
-                grainCloudVis->at(selectedCloud)->setSelectState(false);
-                //reset selected cloud
-                selectedCloud = -1;
-                //cout << "deselecting cloud" <<endl;
+            if (_selectedCloud >=0)
+            {
+                _grainCloudVis->at(_selectedCloud)->setSelectState(false);
+                // reset selected cloud
+                _selectedCloud = -1;
+                // cout << "deselecting cloud" <<endl;
             }
             
         case RECT:
-            if (selectedRect >= 0){
-                //cout << "deselecting rect" << endl;
-                soundViews->at(selectedRect)->setSelectState(false);
-                selectedRect = -1;
+            if (_selectedRect >= 0)
+            {
+                // cout << "deselecting rect" << endl;
+                _soundViews->at(_selectedRect)->setSelectState(false);
+                _selectedRect = -1;
             }
-            
     }
 }
 
 
 
-//mouse clicks
-void mouseFunc(int button, int state, int x, int y){
-    //cout << "button " << button << endl;
+// mouse clicks
+void
+mouseFunc(int button, int state, int x, int y)
+{
+    // cout << "button " << button << endl;
 
-            //look for selections if button is down
-            if ((button == GLUT_LEFT_BUTTON) || (button == GLUT_RIGHT_BUTTON) && (state == GLUT_DOWN)){
+    // look for selections if button is down
+    if ((button == GLUT_LEFT_BUTTON) ||
+        (button == GLUT_RIGHT_BUTTON) && (state == GLUT_DOWN))
+    {            
+        _paramString = "";
+        
+        // hide menu
+        if (_menuFlag)
+            _menuFlag = false;
                 
-                paramString = "";
+        deselect(CLOUD);
+        
+        // deselect existing selections
+        deselect(RECT);
+        
+        // exit parameter editing
+        _currentParam = -1;
                 
-                //hide menu
-                if (menuFlag == true)
-                    menuFlag = false;
+        _lastDragX = _veryHighNumber;
+        _lastDragY = _veryHighNumber;
+        
+        // first check grain clouds to see if we have selection
+        for (int i = 0; i < _grainCloudVis->size(); i++)
+        {
+            if (_grainCloudVis->at(i)->select(_mouseX, _mouseY))
+            {
+                _grainCloudVis->at(i)->setSelectState(true);
+                _selectedCloud = i;
+                break;
+            }            
+        }
                 
-                deselect(CLOUD);
-                //deselect existing selections
-                deselect(RECT);
-                //exit parameter editing
-                currentParam = -1;
                 
-                lastDragX = veryHighNumber;
-                lastDragY = veryHighNumber;
-                //first check grain clouds to see if we have selection
-                for (int i = 0; i < grainCloudVis->size(); i++){
-                    if (grainCloudVis->at(i)->select(mouseX, mouseY) == true){
-                        grainCloudVis->at(i)->setSelectState(true);
-                        selectedCloud = i;
-                        break;
-                    }            
+        // clear selection buffer
+        if (_selectionIndices)
+            delete _selectionIndices;
+        
+        // allocate new buffer
+        _selectionIndices = new vector<int>;
+        _selectionIndex = 0;
+        
+        // if grain cloud is not selected - search for rectangle selection
+        if (_selectedCloud < 0)
+        {
+            // search for selections
+            
+            //set resize direction to horizontal
+            _resizeDir = false;
+            for (int i = 0; i < _soundViews->size(); i++)
+            {
+                if (_soundViews->at(i)->select(_mouseX,_mouseY))
+                {
+                    _selectionIndices->push_back(i);
+                    //_soundViews->at(i)->setSelectState(true);
+                    //_selectedRect = i;
+                    //break;
                 }
-                
-                
-                //clear selection buffer
-                if (selectionIndices)
-                    delete selectionIndices;
-                //allocate new buffer
-                selectionIndices = new vector<int>;
-                selectionIndex = 0;
-                //if grain cloud is not selected - search for rectangle selection
-                if (selectedCloud < 0){
-                    //search for selections
-                    resizeDir = false;//set resize direction to horizontal
-                    for (int i = 0; i < soundViews->size(); i++){
-                        if (soundViews->at(i)->select(mouseX,mouseY) == true){
-                            selectionIndices->push_back(i);
-                            //soundViews->at(i)->setSelectState(true);
-                            //selectedRect = i;
-                            //break;
-                        }
-                    }
-                    
-                    if (selectionIndices->size() > 0){
-                        selectedRect = selectionIndices->at(0);
-                        soundViews->at(selectedRect)->setSelectState(true);
-                    }
-                }
-                
             }
-
+            
+            if (_selectionIndices->size() > 0)
+            {
+                _selectedRect = _selectionIndices->at(0);
+                _soundViews->at(_selectedRect)->setSelectState(true);
+            }
+        }
+        
+    }
     
-//    //handle button up
-//    if ((button == GLUT_LEFT_BUTTON) && (state == GLUT_UP)){
-//        lastDragX = -1;
-//        lastDragY = -1;
-//        dragMode = MOVE;
-//    }
     
+    // handle button up
+    // if ((button == GLUT_LEFT_BUTTON) && (state == GLUT_UP)){
+    //     _lastDragX = -1;
+    //     _lastDragY = -1;
+    //     _dragMode = MOVE;
+    // }
 }
 
 //-----------------------------------------------------------------------------
 // Handle mouse movement during button press (drag)
 //-----------------------------------------------------------------------------
-
-void mouseDrag(int x, int y)
+void
+mouseDrag(int x, int y)
 {
-    //update mouse coordinates based on drag position
+    // update mouse coordinates based on drag position
     updateMouseCoords(x,y);
     int xDiff = 0;
     int yDiff = 0;
     
-    if (selectedCloud >= 0){
-        grainCloudVis->at(selectedCloud)->updateCloudPosition(mouseX,mouseY);
-    }else{
-        
-        switch (dragMode) {
+    if (_selectedCloud >= 0)
+        _grainCloudVis->at(_selectedCloud)->
+            updateCloudPosition(_mouseX,_mouseY);
+    else
+    {    
+        switch (_dragMode)
+        {
             case MOVE:
-                if( (lastDragX != veryHighNumber) && (lastDragY != veryHighNumber)){
-                    
-                    if (selectedRect >=0){                    //movement case                    
-                        soundViews->at(selectedRect)->move(mouseX - lastDragX,mouseY - lastDragY);
-                    }
+                if( (_lastDragX != _veryHighNumber) &&
+                    (_lastDragY != _veryHighNumber))
+                {    
+                    if (_selectedRect >=0)
+                        //movement case
+                        _soundViews->at(_selectedRect)->
+                            move(_mouseX - _lastDragX,_mouseY - _lastDragY);
                 }
-                lastDragX = mouseX;
-                lastDragY = mouseY;
+                _lastDragX = _mouseX;
+                _lastDragY = _mouseY;
                 break;
                 
             case RESIZE:
-                if( (lastDragX != veryHighNumber) && (lastDragY != veryHighNumber)){
-                    //cout << "drag ok" << endl;
-                    //for width height - use screen coords
-                    
-                    if (selectedRect >= 0){
-                        xDiff = x - lastDragX;
-                        yDiff = y - lastDragY;
-                        //get width and height
-                        float newWidth = soundViews->at(selectedRect)->getWidth();
-                        float newHeight = soundViews->at(selectedRect)->getHeight();
+                if((_lastDragX != _veryHighNumber) &&
+                    (_lastDragY != _veryHighNumber))
+                {
+                    // cout << "drag ok" << endl;
+                    // for width height - use screen coords
+                    if (_selectedRect >= 0)
+                    {
+                        xDiff = x - _lastDragX;
+                        yDiff = y - _lastDragY;
+                        
+                        // get width and height
+                        float newWidth = _soundViews->at(_selectedRect)->getWidth();
+                        float newHeight = _soundViews->at(_selectedRect)->getHeight();
                         
                         int thresh = 0;
-                        //check motion mag
-                        if (xDiff < -thresh){
-                            newWidth = newWidth * 0.8 + 0.2*(newWidth * (1.1 + abs(xDiff/50.0)));
-                        }else{
+                        
+                        // check motion mag
+                        if (xDiff < -thresh)
+                            newWidth = newWidth * 0.8 +
+                                0.2*(newWidth * (1.1 + abs(xDiff/50.0)));
+                        else
+                        {
                             if (xDiff > thresh)
-                                newWidth = newWidth * 0.8 + 0.2*(newWidth * (0.85 - abs(xDiff/50.0)));
+                                newWidth = newWidth * 0.8 +
+                                    0.2*(newWidth * (0.85 - abs(xDiff/50.0)));
                         }
-                        if (yDiff > thresh){
-                            newHeight = newHeight * 0.8 + 0.2*(newHeight * (1.1 + abs(yDiff/50.0)));
-                        }else{
+                        if (yDiff > thresh)
+                        {
+                            newHeight = newHeight * 0.8 +
+                                0.2*(newHeight * (1.1 + abs(yDiff/50.0)));
+                        }else
+                        {
                             if (yDiff < -thresh)
-                         newHeight = newHeight * 0.8 + 0.2*(newHeight * (0.85 - abs(yDiff/50.0)));
+                                newHeight = newHeight * 0.8 +
+                                    0.2*(newHeight * (0.85 - abs(yDiff/50.0)));
                         }
-                            
-                            //update width and height
-                        soundViews->at(selectedRect)->setWidthHeight(newWidth,newHeight);
-                            
+                        
+                        // update width and height
+                        _soundViews->at(_selectedRect)->
+                            setWidthHeight(newWidth,newHeight);
                     }
-                    
-                   
                 }   
-                lastDragX = x;
-                lastDragY = y;
+                _lastDragX = x;
+                _lastDragY = y;
                 break;
+                
             default:
                 break;
         }
     }
-    
 }
 
 
@@ -1659,54 +1960,56 @@ void mouseDrag(int x, int y)
 //-----------------------------------------------------------------------------
 // Handle mouse movement anytime
 //-----------------------------------------------------------------------------
-
-void mousePassiveMotion(int x, int y)
+void
+mousePassiveMotion(int x, int y)
 {
     updateMouseCoords(x,y);
     
-    
-        if (selectedCloud >=0){
-            switch (currentParam) {
+    if (_selectedCloud >=0)
+    {
+        switch (_currentParam)
+        {
                 case MOTIONX:
-                    grainCloudVis->at(selectedCloud)->setXRandExtent(mouseX);
+                    _grainCloudVis->at(_selectedCloud)->setXRandExtent(_mouseX);
                     break;
+                    
                 case MOTIONY:
-                    grainCloudVis->at(selectedCloud)->setYRandExtent(mouseY);
+                    _grainCloudVis->at(_selectedCloud)->setYRandExtent(_mouseY);
                     break;
+                    
                 case MOTIONXY:
-                    grainCloudVis->at(selectedCloud)->setRandExtent(mouseX,mouseY);
+                    _grainCloudVis->at(_selectedCloud)->setRandExtent(_mouseX,
+                                                                      _mouseY);
                     break;
+                    
                 default:
                     break;
             }
         }
-    //            case NUMGRAINS:
-    //                break;
-    //            case DURATION:
-    //                grainCloud->at(selectedCloud)->setDurationMs((mouseY/_winHeight)*4000.0f);
+    // case NUMGRAINS:
+    //   break;
+    // case DURATION:
+    // _grainCloud->at(_selectedCloud)->setDurationMs((_mouseY/_winHeight)*4000.0f);
     //            
-    //            default:
-    //                break;
-    //        }
-    //    }
-    //process rectangles
-    //    for (int i = 0; i < soundViews->size(); i++)
-    //        soundViews->at(i)->procMovement(x, y);
+    // default:
+    // break;
+    //   }
+    // }
+    // process rectangles
+    // for (int i = 0; i < _soundViews->size(); i++)
+    //     _soundViews->at(i)->procMovement(x, y);
     //    
 }
-
-
-
-
-
 
 //-----------------------------------------------------------------------------//
 // MAIN
 //-----------------------------------------------------------------------------//
-int main (int argc, char ** argv)
+int
+main(int argc, char ** argv)
 {
-    //init random number generator
+    // init random number generator
     srand(time(NULL));
+
     //start time
     
     //-------------Graphics Initialization--------//
@@ -1717,78 +2020,80 @@ int main (int argc, char ** argv)
     // initialize graphics
     initialize();
     
-    
-    
-    
-    
     // load sounds
     AudioFileSet newFileMgr;
     
-    if (newFileMgr.loadFileSet(g_audioPath) == 1){
+    if (newFileMgr.loadFileSet(_audioPath) == 1)
+    {
         goto cleanup;
     }
     
-    mySounds = newFileMgr.getFileVector();
-    cout << "Sounds loaded successfully..." << endl;    
+    _sounds = newFileMgr.getFileVector();
+    cout << "Sounds loaded successfully..." << endl;
     
-    
-    
-    //create visual representation of sounds    
-    soundViews = new vector<SoundRect *>;
-    for (int i = 0; i < mySounds->size(); i++)
+    // create visual representation of sounds    
+    _soundViews = new vector<SoundRect *>;
+    for (int i = 0; i < _sounds->size(); i++)
     {
-        soundViews->push_back(new SoundRect(_style, _winWidth,_winHeight));
-        soundViews->at(i)->associateSound(mySounds->at(i)->wave,mySounds->at(i)->frames,mySounds->at(i)->channels);
+        _soundViews->push_back(new SoundRect(_style, _winWidth, _winHeight));
+        _soundViews->at(i)->associateSound(_sounds->at(i)->_wave,
+                                          _sounds->at(i)->_frames,
+                                          _sounds->at(i)->_channels);
     }
     
-    //init grain cloud vector and corresponding view vector
-    grainCloud = new vector<GrainCluster *>;
-    grainCloudVis = new vector<GrainClusterVis *>;
-    
-    
+    // init grain cloud vector and corresponding view vector
+    _grainCloud = new vector<GrainCluster *>;
+    _grainCloudVis = new vector<GrainClusterVis *>;
     
     //-------------Audio Configuration-----------//
     
-    //configure RtAudio
-    //create the object
-    try {
-        theAudio = new MyRtAudio(1,MY_CHANNELS, MY_SRATE, &g_buffSize, MY_FORMAT,true);
-    } catch (RtAudioError & err) {
+    // configure RtAudio
+    // create the object
+    try
+    {
+        _audio = new MyRtAudio(1,
+                               CHANNELS,
+                               SRATE,
+                               &_buffSize,
+                               FORMAT,
+                               true);
+    }
+    catch (RtAudioError & err)
+    {
         err.printMessage();
         exit(1);
     }    
     try
     {
-        //open audio stream/assign callback
-        theAudio->openStream(&audioCallback);
-        //get new buffer size
-        g_buffSize = theAudio->getBufferSize();
-        //start audio stream
-        theAudio->startStream();
-        //report latency
-        theAudio->reportStreamLatency();        
+        // open audio stream/assign callback
+        _audio->openStream(&audioCallback);
         
-    }catch (RtAudioError & err )
+        // get new buffer size
+        _buffSize = _audio->getBufferSize();
+        
+        // start audio stream
+        _audio->startStream();
+        
+        // report latency
+        _audio->reportStreamLatency();        
+        
+    }
+    catch(RtAudioError & err)
     {
         err.printMessage();
         goto cleanup;
     }
     
-    
-    
-    //start graphics
+    // start graphics
     // let GLUT handle the current thread from here
     glutMainLoop();
     
     cout <<"Something went wrong...shouldn't be here" << endl;
     
-    
-    //cleanup routine
+    // cleanup routine
 cleanup:
     cleaningFunction();
     
     // done
     return 0;
-    
 }
-

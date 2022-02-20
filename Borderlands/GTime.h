@@ -27,24 +27,21 @@
 //  Created by Christopher Carlson on 12/2/11.
 //
 
-
 #ifndef GTIME_H
 #define GTIME_H
 
 #include <stdlib.h>
 
-class GTime{
+class GTime
+{
 public:
-    static GTime & instance();
-    double sec;
+    static GTime &instance();
+
+    double _sec;
     
 private:
     ~GTime();
     GTime();
-
-    
-    
-    
 };
 
 #endif

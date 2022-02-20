@@ -33,55 +33,55 @@
 
 #include <vector>
 #include <string>
-#include "sndfile.h"
-#include "dirent.h"
 #include  <iostream>
-#include "theglobals.h"
 using namespace std;
 
+#include "sndfile.h"
+#include "dirent.h"
+#include "globals.h"
 
-//basic encapsulation of an audio file
-struct AudioFile{
-    
-    //constructor
-    AudioFile(string myName,string thePath,unsigned int numChan, unsigned long numFrames,unsigned int srate, SAMPLE * theWave)
+
+// basic encapsulation of an audio file
+struct AudioFile
+{    
+    AudioFile(string name, string path,
+              unsigned int numChan, unsigned long numFrames,
+              unsigned int sampleRate, SAMPLE *wave)
     {
         cout << numFrames << endl;
-        this->name = myName;
-        this->path = thePath;
-        this->frames = numFrames;
-        this->lengthSamps = numFrames * numChan;
-        this->channels = numChan;
-        this->sampleRate = srate;
-        this->wave = theWave;
+        
+        _name = name;
+        _path = path;
+        _frames = numFrames;
+        _lengthSamps = numFrames * numChan;
+        _channels = numChan;
+        _sampleRate = sampleRate;
+        _wave = wave;
 
     }
-    //destructor
-    ~AudioFile(){
-        if (wave != NULL){
-            delete [] wave;
-        }
+    
+    virtual ~AudioFile()
+    {
+        if (_wave != NULL)
+            delete []_wave;
     }
     
-    string name;
-    string path;
-    SAMPLE * wave;
-    unsigned long frames;
-    unsigned long lengthSamps;
-    unsigned int channels;
-    unsigned int sampleRate;
+    string _name;
+    string _path;
+    SAMPLE *_wave;
+    unsigned long _frames;
+    unsigned long _lengthSamps;
+    unsigned int _channels;
+    unsigned int _sampleRate;
 };
 
 
-
 class AudioFileSet
-{
-    
+{    
 public:
-    virtual ~AudioFileSet();
-    
-    //constructor
     AudioFileSet();
+
+    virtual ~AudioFileSet();
     
     //read in all audio files contained in 
     int loadFileSet(string path);
@@ -89,14 +89,11 @@ public:
     //return the audio vector- note, the intension is for the files to be
     //read only.  if write access is needed in the future - thread safety will
     //need to be considered
-    vector<AudioFile *> * getFileVector();
+    vector<AudioFile *> *getFileVector();
     
     
 private:    
-    vector<AudioFile *> * fileSet;
-
+    vector<AudioFile *> *_fileSet;
 };
-
-
 
 #endif

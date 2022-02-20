@@ -40,152 +40,165 @@
 #include <Stk.h>
 
 #include "GrainVoice.h"
-#include "theglobals.h"
+#include "globals.h"
 #include "Window.h"
 #include "Thread.h"
 #include "SoundRect.h"
 
-//direction modes
-enum {FORWARD, BACKWARD, RANDOM_DIR};
+// direction modes
+enum
+{
+    FORWARD,
+    BACKWARD,
+    RANDOM_DIR
+};
 
-//spatialization modes
-enum {UNITY, STEREO, AROUND}; //eventually include channel list specification and VBAP?
+// spatialization modes
+enum
+{
+    UNITY,
+    STEREO,
+    AROUND
+}; // eventually include channel list specification and VBAP?
 
 using namespace std;
 
-
-//forward declarations
+// forward declarations
 class GrainCluster;
 class GrainClusterVis;
 class Style;
 
-//ids
+// ids
 static unsigned int clusterId = 0;
-
 
 //class interface
 class GrainCluster
-{
-    
+{    
 public:
-    //destructor
     virtual ~GrainCluster();
     
-    //constructor
     GrainCluster(Style *style,
-                 vector<AudioFile *> *soundSet, float theNumVoices);
+                 vector<AudioFile *> *soundSet, float numVoices);
     
-    //compute next buffer of audio (accumulate from grains)
+    // compute next buffer of audio (accumulate from grains)
     void nextBuffer(double * accumBuff, unsigned int numFrames);
     
-    //CLUSTER PARAMETER accessors/mutators
+    // CLUSTER PARAMETER accessors/mutators
     // set duration for all grains
-    void setDurationMs(float theDur);
+    void setDurationMs(float dur);
     float getDurationMs();
     
-    
-    //overlap
+    // overlap
     void setOverlap(float targetOverlap);
     float getOverlap();
     
-    //pitch
+    // pitch
     void setPitch(float targetPitch);
     float getPitch();
     
-    //pitch lfo methods
+    // pitch lfo methods
     void setPitchLFOFreq(float pfreq);
     float getPitchLFOFreq();
     void setPitchLFOAmount(float lfoamt);
     float getPitchLFOAmount();
     
-    //direction
+    // direction
     void setDirection(int dirMode);
     int getDirection();
     
-    //add/remove grain voice
+    // add/remove grain voice
     void addGrain();
     void removeGrain();
     
-    //set window type
+    // set window type
     void setWindowType(int windowType);
     int getWindowType();
     
-
-    //spatialization methods (see enum for theMode.  channel number is optional and has default arg); 
-    void setSpatialMode(int theMode,int channelNumber);
+    // spatialization methods
+    // (see enum for mode.  channel number is optional and has default arg); 
+    void setSpatialMode(int mode, int channelNumber);
     int getSpatialMode();
     int getSpatialChannel();
     
-    //volume
-    void setVolumeDb(float theVolDB);
+    // volume
+    void setVolumeDb(float volDB);
     float getVolumeDb();
 
-    
-    //get unique id of grain cluster    
+    // get unique id of grain cluster    
     unsigned int getId();
     
-    //register visualization 
-    void registerVis(GrainClusterVis * myVis);
+    // register visualization 
+    void registerVis(GrainClusterVis *vis);
     
-    //turn on/off
+    // turn on/off
     void toggleActive();
     bool getActiveState();
 
     
-    //return number of voices
+    // return number of voices
     unsigned int getNumVoices();
     
     
 protected:
-    //update internal trigger point
+    // update internal trigger point
     void updateBangTime();
     
-    //spatialization - get new channel multiplier buffer to pass to grain voice instance
+    // spatialization
+    // get new channel multiplier buffer to pass to grain voice instance
     void updateSpatialization();
     
 private:
-    unsigned int myId; //unique id
+    unsigned int _id; // unique id
     
-    bool isActive; //on/off state
-    bool awaitingPlay; //triggered but not ready to play?
-    bool addFlag,removeFlag; //add/remove requests submitted?
-    unsigned long local_time; //internal clock
-    double startTime; //instantiation time
-    double bang_time; //trigger time for next grain
-    unsigned int nextGrain; //grain voice index
+    bool _isActive; // on/off state
+    bool _awaitingPlay; // triggered but not ready to play?
+    bool _addFlag;
+    bool _removeFlag; // add/remove requests submitted?
+    unsigned long _localTime; // internal clock
+    double _startTime; // instantiation time
+    double _bangTime; // trigger time for next grain
+    unsigned int _nextGrain; // grain voice index
     
-    //spatialization vars    
-    int currentAroundChan;
-    int stereoSide; 
-    int side;
+    // spatialization vars
+    int _currentAroundChan;
+    int _stereoSide; 
+    int _side;
 
    
-    //thread safety
-    Mutex *myLock; 
+    // thread safety
+    Mutex *_lock; 
     
-    //registered visualization
-    GrainClusterVis * myVis; 
+    // registered visualization
+    GrainClusterVis *_vis; 
     
-    //spatialization
-    double * channelMults;
-    int spatialMode;
-    int channelLocation;
+    // spatialization
+    double *_channelMults;
+    int _spatialMode;
+    int _channelLocation;
 
-    //volume
-    float volumeDb,normedVol;
+    // volume
+    float _volumeDb;
+    float _normedVol;
     
-    //vector of grains
-    vector<GrainVoice *> * myGrains;
+    // vector of grains
+    vector<GrainVoice *> *_grains;
     
-    //number of grains in this cluster
-    unsigned int numVoices;
+    // number of grains in this cluster
+    unsigned int _numVoices;
 
-    //cluster params
-    float overlap, overlapNorm, pitch, duration,pitchLFOFreq, pitchLFOAmount;
-    int myDirMode, windowType;
+    // cluster params
+    float _overlap;
+    float _overlapNorm;
+    float _pitch;
+    float _duration;
+    float _pitchLFOFreq;
+    float _pitchLFOAmount;
     
-    //audio files
-    vector<AudioFile *> *theSounds;
+    int _dirMode;
+    int _windowType;
+    
+    // audio files
+    vector<AudioFile *> *_sounds;
 
     Style *_style;
 };
@@ -193,73 +206,97 @@ private:
 
 
 
-//VISUALIZATION/CONTROLLER
-class GrainClusterVis{
+// VISUALIZATION/CONTROLLER
+class GrainClusterVis
+{
 public:
-    //destructor
     ~GrainClusterVis();
     
-    //constructor (takes center position (x,y), number of voices, sound rectangles)
+    // takes center position (x,y), number of voices, sound rectangles
     GrainClusterVis(Style *_style,
-                    unsigned int winWidth, unsigned int winHeight,
+                    unsigned int winWidth,
+                    unsigned int winHeight,
                     float x, float y,
-                    unsigned int numVoices,vector<SoundRect*>*rects);
+                    unsigned int numVoices,
+                    vector<SoundRect*>*rects);
 
     void updateWinWidthHeight(unsigned int newWinWidth,
                               unsigned int newWinHeight);
         
-    //render
+    // render
     void draw();
-    //get playback position in registered rectangles and return to grain cloud
-    void getTriggerPos(unsigned int idx, double * playPos, double * playVols,float dur);
-    //move grains
+    
+    // get playback position in registered rectangles and return to grain cloud
+    void getTriggerPos(unsigned int idx,
+                       double *playPos,
+                       double *playVols,
+                       float dur);
+
+    // move grains
     void updateCloudPosition(float x, float y);
     void updateGrainPosition(int idx, float x, float y);
     void setState(int idx, bool on);
-    //add grain
+    
+    // add grain
     void addGrain();
-    //remove grain element from visualization
+    
+    // remove grain element from visualization
     void removeGrain();
-    //set selection (highlight)
+    
+    // set selection (highlight)
     void setSelectState(bool state);
-    //determine if mouse click is in selection range
+    
+    // determine if mouse click is in selection range
     bool select(float x, float y);
-    //get my x coordinate
+    
+    // get my x coordinate
     float getX();
-    //get my y coordinate
+    
+    // get my y coordinate
     float getY();
     
-    //randomness params for grain positions
+    // randomness params for grain positions
     float getXRandExtent();
     float getYRandExtent();
     void setXRandExtent(float mouseX);
     void setYRandExtent(float mouseY);
     void setRandExtent(float mouseX, float mouseY);
     
-    //set the pulse duration (which determines the frequency of the pulse)
+    // set the pulse duration (which determines the frequency of the pulse)
     void setDuration(float dur);
     
-protected:
 private:
-    bool isOn,isSelected;
-    bool addFlag,removeFlag;
-    double startTime;
-    unsigned int _winWidth,_winHeight;
+    bool _isOn;
+    bool _isSelected;
+    bool _addFlag;
+    bool _removeFlag;
+    double _startTime;
+    unsigned int _winWidth;
+    unsigned int _winHeight;
     
-    float _xRandExtent, _yRandExtent;
+    float _xRandExtent;
+    float _yRandExtent;
     
-    float freq;
-    float gcX, gcY;
-    float selRad, lambda, _maxSelRad, _minSelRad,targetRad;
-    unsigned int numGrains;
+    float _freq;
+    float _gcX;
+    float _gcY;
     
-    //grain voice visualizations
-    vector<GrainVis*> * myGrainsV;
-    //registered sound rectangles 
-    vector<SoundRect*> * theLandscape;
+    float _selRad;
+    float _lambda;
+    
+    float _maxSelRad;
+    float _minSelRad;
+    float _targetRad;
+    
+    unsigned int _numGrains;
+    
+    // grain voice visualizations
+    vector<GrainVis*> * _grains;
+    
+    // registered sound rectangles 
+    vector<SoundRect*> * _landscape;
 
     Style *_style;
 };
-
 
 #endif
