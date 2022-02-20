@@ -290,15 +290,19 @@ PurpleStyle::PurpleStyle()
     _paramColor[2] = 0.92;
     _paramColor[3] = 1.0;
 
-    _grainColor[0] = 0.72;
-    _grainColor[1] = 0.70;
-    _grainColor[2] = 0.38;
-    _grainColor[3] = 0.35;
+    /*_grainColor[0] = 0.72;
+      _grainColor[1] = 0.70;
+      _grainColor[2] = 0.38;
+      _grainColor[3] = 0.35;*/
+    _grainColor[0] = 0.71;
+    _grainColor[1] = 0.40;
+    _grainColor[2] = 1.0;
+    _grainColor[3] = 0.5;
 
-    _grainColorSelected[0] = 0.39,
-    _grainColorSelected[1] = 0.18;
-    _grainColorSelected[2] = 0.28;
-    _grainColorSelected[3] = 0.3;
+    _grainColorSelected[0] = 0.71; //0.74,
+    _grainColorSelected[1] = 0.40; //0.37;
+    _grainColorSelected[2] = 1.0; //0.53;
+    _grainColorSelected[3] = 0.9; //0.35;
 
     _grainVisColor[0] = 0.81; //1.0;
     _grainVisColor[1] = 0.0; //1.0;
