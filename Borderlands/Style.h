@@ -88,4 +88,12 @@ public:
     virtual ~PurpleStyle();
 };
 
+// psyche style
+class PsycheStyle : public Style
+{
+public:
+    PsycheStyle();
+    virtual ~PsycheStyle();
+};
+
 #endif

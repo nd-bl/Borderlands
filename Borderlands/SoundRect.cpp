@@ -193,10 +193,17 @@ void SoundRect::randColor()
     //color
     colR = 0.4 + ((float)rand()/RAND_MAX)*0.3;
 
+    float soundRectColorCoeff[4];
+    _style->getSoundRectColorCoeff(soundRectColorCoeff);
+        
     if (!_style->getRandSoundRectColor())
     {
         colG = colR;
         colB = colR;
+
+        colR *= soundRectColorCoeff[0];
+        colG *= soundRectColorCoeff[1];
+        colB *= soundRectColorCoeff[2];
     }
     else
     {
@@ -209,11 +216,6 @@ void SoundRect::randColor()
     colA = aMin + ((float)rand()/RAND_MAX) * 0.2f;
     //wPulse = 0.95 + ((float)rand()/RAND_MAX) *0.1;
 
-    float soundRectColorCoeff[4];
-    _style->getSoundRectColorCoeff(soundRectColorCoeff);
-    colR *= soundRectColorCoeff[0];
-    colG *= soundRectColorCoeff[1];
-    colB *= soundRectColorCoeff[2];
     colA *= soundRectColorCoeff[3];
 }
 
