@@ -27,6 +27,9 @@
 //  Created by Christopher Carlson on 11/21/11.
 //
 
+#include <math.h>
+
+#include "globals.h"
 #include "AudioFileSet.h"
 
 //---------------------------------------------------------------------------
@@ -176,6 +179,23 @@ the current sample rate of %i\n",fileName.c_str(), SRATE);
                 sf_count_t count =
                     sf_read_float(infile, &stereoBuff[0], buffSize);
 #endif
+
+#if NORMALISE_LOADED_SOUND_FILES
+                SAMPLE maxVal = 0.0;
+                for(int i = 0; i < buffSize; i++)
+                {
+                    if (fabs(stereoBuff[i]) > maxVal)
+                        maxVal = fabs(stereoBuff[i]);
+                }
+
+                int normFactor = 1.0;
+                if (maxVal > 1e-15)
+                    normFactor = 1.0/maxVal;
+                
+                for(int i = 0; i < buffSize; i++)
+                    stereoBuff[i] *= normFactor;
+#endif
+                
                 // break if we reached the end of the file
                 // print the sample values to screen
                 for(int i = 0; i < buffSize; i++)

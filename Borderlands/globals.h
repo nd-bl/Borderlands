@@ -75,6 +75,9 @@ static const double globalAtten = 0.5;
 //#define FPS 60.0
 #define FPS -1.0 // for default
 
+// makes crackles...
+#define NORMALISE_LOADED_SOUND_FILES 0 //1
+
 ////-----------------------------------------------------------------------------
 //// Defines a point in a 2D space (coords x, y)
 ////-----------------------------------------------------------------------------
