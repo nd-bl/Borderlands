@@ -1789,6 +1789,7 @@ keyboardFunc(unsigned char key, int x, int y)
             break;
             
         case 127: // delete selected
+        case 8: // delete (tested on mac keyboard)
             if (_paramString == "")
             {
                 if (_selectedCloud >=0)
