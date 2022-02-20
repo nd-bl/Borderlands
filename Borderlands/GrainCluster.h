@@ -57,6 +57,7 @@ using namespace std;
 //forward declarations
 class GrainCluster;
 class GrainClusterVis;
+class Style;
 
 //ids
 static unsigned int clusterId = 0;
@@ -71,7 +72,8 @@ public:
     virtual ~GrainCluster();
     
     //constructor
-    GrainCluster(vector<AudioFile *> *soundSet, float theNumVoices);
+    GrainCluster(Style *style,
+                 vector<AudioFile *> *soundSet, float theNumVoices);
     
     //compute next buffer of audio (accumulate from grains)
     void nextBuffer(double * accumBuff, unsigned int numFrames);
@@ -184,7 +186,8 @@ private:
     
     //audio files
     vector<AudioFile *> *theSounds;
-    
+
+    Style *_style;
 };
 
 
@@ -197,7 +200,8 @@ public:
     ~GrainClusterVis();
     
     //constructor (takes center position (x,y), number of voices, sound rectangles)
-    GrainClusterVis(unsigned int winWidth, unsigned int winHeight,
+    GrainClusterVis(Style *_style,
+                    unsigned int winWidth, unsigned int winHeight,
                     float x, float y,
                     unsigned int numVoices,vector<SoundRect*>*rects);
 
@@ -253,6 +257,8 @@ private:
     vector<GrainVis*> * myGrainsV;
     //registered sound rectangles 
     vector<SoundRect*> * theLandscape;
+
+    Style *_style;
 };
 
 

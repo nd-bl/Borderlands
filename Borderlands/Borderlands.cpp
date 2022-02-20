@@ -63,6 +63,7 @@
 //graphics and audio related
 #include "GrainCluster.h"
 
+#include "Style.h"
 
 using namespace std;
 
@@ -74,6 +75,8 @@ unsigned int _winWidth, _winHeight;
 // and would still take the whole screen (but with a top bar)
 //bool isFullScreen = true;
 bool isFullScreen = false;
+
+Style *_style = NULL;
 
 //-----------------------------------------------------------------------------
 // Defines a point in a 3D space (coords x, y and z)
@@ -218,6 +221,12 @@ void cleaningFunction(){
     if (selectionIndices != NULL){
         delete selectionIndices;
     }
+
+    if (_style != NULL)
+    {
+        delete _style;
+        _style = NULL;
+    }
 }
 
 
@@ -349,7 +358,7 @@ void toggleFullScreen(){
 
 void initialize()
 {
-    
+    _style = new DefaultStyle();
     
     // initial window settings
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH );
@@ -394,9 +403,13 @@ void initialize()
     */
         
     //full screen end
-    
+
+    float bgColor[4];
+    _style->getBackgroundColor(bgColor);
+        
     // initial state
-    glClearColor(0.15, 0.15, 0.15,1.0f);
+    glClearColor(bgColor[0], bgColor[1], bgColor[2], bgColor[3]);
+    
     //enable depth buffer updates
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
@@ -536,19 +549,27 @@ void drawAxis()
     
     //specify vertices with this drawing mode
     glBegin(GL_LINES);
-    glLineWidth(0.9f);
+    float axisLineWidth = _style->getAxisLineWidth();
+    glLineWidth(axisLineWidth);
     //x axis
-    glColor4f(1,0,0,0.9);
+
+    float axisXColor[4];
+    _style->getAxisXColor(axisXColor);
+    glColor4f(axisXColor[0], axisXColor[1], axisXColor[2], axisXColor[3]);
     glVertex3f(0,0,0);
     glVertex3f(_winWidth,0,0);
     
-    //x axis
-    glColor4f(0,1,0,0.9);
+    //y axis
+    float axisYColor[4];
+    _style->getAxisYColor(axisYColor);
+    glColor4f(axisYColor[0], axisYColor[1], axisYColor[2], axisYColor[3]);
     glVertex3f(0,0,0);
     glVertex3f(0,_winHeight,0);
     
     //z axis
-    glColor4f(0,0,1,0.7);
+    float axisZColor[4];
+    _style->getAxisZColor(axisZColor);
+    glColor4f(axisZColor[0], axisZColor[1], axisZColor[2], axisZColor[3]);
     glVertex3f(0,0,0);
     glVertex3f(0,0,400);
     
@@ -585,20 +606,32 @@ void draw_string( GLfloat x, GLfloat y, GLfloat z, const char * str, GLfloat sca
 void printUsage(){
     float smallSize = 0.03f;
     float mediumSize = 0.04f;
-    glLineWidth(2.0f);
+    float usageLineWidth = _style->getUsageLineWidth();
+    glLineWidth(usageLineWidth);
+    
     float theA = 0.6f + 0.2*sin(0.8*PI*GTime::instance().sec);
-    glColor4f(theA,theA,theA,theA);
+
+    float colCoeffA[4];
+    _style->getUsageAColorCoeff(colCoeffA);
+    glColor4f(theA*colCoeffA[0],theA*colCoeffA[1],
+              theA*colCoeffA[2],theA*colCoeffA[3]);
     draw_string(_winWidth/2.0f + 0.2f*(float)_winWidth,(float)_winHeight/2.0f, 0.5f,"BORDERLANDS",(float)_winWidth*0.1f);
    
     theA = 0.6f + 0.2*sin(0.9*PI*GTime::instance().sec);
     float insColor = theA*0.4f;
-    glColor4f(insColor,insColor,insColor,theA);
+
+    float colCoeffIns[4];
+    _style->getUsageInsColorCoeff(colCoeffIns);
+    glColor4f(insColor*colCoeffIns[0],insColor*colCoeffIns[1],
+              insColor*colCoeffIns[2],theA*colCoeffIns[3]);
     //key info
     draw_string(_winWidth/2.0f + 0.2f*(float)_winWidth + 10.0,(float)_winHeight/2.0f + 30.0, 0.5f,"CLICK TO START",(float)_winWidth*0.04f);
 
     theA = 0.6f + 0.2*sin(1.0*PI*GTime::instance().sec);
     insColor = theA*0.4f;
-    glColor4f(insColor,insColor,insColor,theA);
+    glColor4f(insColor*colCoeffIns[0],insColor*colCoeffIns[1],
+              insColor*colCoeffIns[2],theA*colCoeffIns[3]);
+    
     //key info
     draw_string(_winWidth/2.0f + 0.2f*(float)_winWidth+10.0,(float)_winHeight/2.0f + 50.0, 0.5f,"ESCAPE TO QUIT",(float)_winWidth*0.04f);
     
@@ -610,12 +643,16 @@ void printUsage(){
 void printManual(){
     float smallSize = 0.03f;
     float mediumSize = 0.04f;
-    glLineWidth(2.0f);
+
+    float manualLineWidth = _style->getManualLineWidth();
+    glLineWidth(manualLineWidth);
     
     //float theA = 0.6f + 0.2*sin(0.9*PI*GTime::instance().sec);
     //float insColor = 0.8;
-    float insColor = 0.6;
-    glColor4f(insColor,insColor,insColor,insColor);
+
+    float insColor[4];
+    _style->getManualInsColor(insColor);
+    glColor4f(insColor[0],insColor[1],insColor[2],insColor[3]);
 
     char *commands[] =
         {
@@ -686,7 +723,11 @@ void printParam(){
         ostringstream sinput;
         ostringstream sinput2;
         float theA = 0.7f + 0.3*sin(1.6*PI*GTime::instance().sec);
-        glColor4f(1.0f,1.0f,1.0f,theA);
+
+        float paramColor[4];
+        _style->getParamColor(paramColor);
+        glColor4f(paramColor[0],paramColor[1],
+                  paramColor[2],theA*paramColor[3]);
         
         switch (currentParam) {
             case NUMGRAINS:
@@ -1253,10 +1294,12 @@ void keyboardFunc( unsigned char key, int x, int y )
                     }
                     selectedCloud = idx;
                     //create audio
-                    grainCloud->push_back(new GrainCluster(mySounds,numVoices));
+                    grainCloud->push_back(new GrainCluster(_style,
+                                                           mySounds,numVoices));
                     //create visualization
                     grainCloudVis->
-                        push_back(new GrainClusterVis(_winWidth, _winHeight,
+                        push_back(new GrainClusterVis(_style,
+                                                      _winWidth, _winHeight,
                                                       mouseX,mouseY,numVoices,soundViews));
                     //select new cloud
                     grainCloudVis->at(idx)->setSelectState(true);
@@ -1692,7 +1735,7 @@ int main (int argc, char ** argv)
     soundViews = new vector<SoundRect *>;
     for (int i = 0; i < mySounds->size(); i++)
     {
-        soundViews->push_back(new SoundRect(_winWidth,_winHeight));
+        soundViews->push_back(new SoundRect(_style, _winWidth,_winHeight));
         soundViews->at(i)->associateSound(mySounds->at(i)->wave,mySounds->at(i)->frames,mySounds->at(i)->channels);
     }
     

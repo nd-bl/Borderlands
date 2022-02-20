@@ -30,6 +30,7 @@
 
 //TODO:  set and show name implementation
 
+#include "Style.h"
 #include "SoundRect.h"
 
 
@@ -43,7 +44,8 @@ SoundRect::~SoundRect()
 
 
 //constructor 
-SoundRect::SoundRect(unsigned int winWidth, unsigned int winHeight){
+SoundRect::SoundRect(Style *style, unsigned int winWidth, unsigned int winHeight){
+    _style = style;
     
     _winWidth = winWidth;
     _winHeight = winHeight;
@@ -190,14 +192,29 @@ void SoundRect::randColor()
 {
     //color
     colR = 0.4 + ((float)rand()/RAND_MAX)*0.3;
-    colG = colR;
-    colB = colR;
+
+    if (!_style->getRandSoundRectColor())
+    {
+        colG = colR;
+        colB = colR;
+    }
+    else
+    {
+        colG = 0.4 + ((float)rand()/RAND_MAX)*0.3;
+        colB = 0.4 + ((float)rand()/RAND_MAX)*0.3;
+    }
+    
     // colG = 0.39f + ((float)rand()/RAND_MAX)*0.51f;
     //colB = 0.27f + ((float)rand()/RAND_MAX)*0.63f;   
     colA = aMin + ((float)rand()/RAND_MAX) * 0.2f;
     //wPulse = 0.95 + ((float)rand()/RAND_MAX) *0.1;
-    
-    
+
+    float soundRectColorCoeff[4];
+    _style->getSoundRectColorCoeff(soundRectColorCoeff);
+    colR *= soundRectColorCoeff[0];
+    colG *= soundRectColorCoeff[1];
+    colB *= soundRectColorCoeff[2];
+    colA *= soundRectColorCoeff[3];
 }
 
 //set width and height
@@ -393,8 +410,14 @@ void SoundRect::draw(){
     
     
     if (isSelected == true){
-        glColor4f(0.1,0.7,0.6,0.35);
-        glLineWidth(2.0f);
+        float soundRectColorSelected[4];
+        _style->getSoundRectColorSelected(soundRectColorSelected);
+        glColor4f(soundRectColorSelected[0], soundRectColorSelected[1],
+                  soundRectColorSelected[2], soundRectColorSelected[3]);
+
+        float lineWidth = _style->getSoundRectLineWidth();
+        glLineWidth(lineWidth);
+        
         glBegin(GL_LINE_STRIP);
         glVertex3f(rleft,rtop,0.0f);
         glVertex3f(rright,rtop,0.0f);
@@ -417,11 +440,18 @@ void SoundRect::draw(){
         }
         
         //buffMult = (buffAlpha + 0.35)/globalAtten;;
+
+        float lineWidth = _style->getWaveLineWidth();
+        glLineWidth(lineWidth);
         
-        glLineWidth(0.3);
-        float waveCol = 1.0f;
-        glColor4f(waveCol,waveCol,waveCol,colA*buffAlpha);
-        glPointSize(1.0);
+        float waveColor[4];
+        _style->getWaveColor(waveColor);
+        glColor4f(waveColor[0],waveColor[1],
+                  waveColor[2],colA*buffAlpha*waveColor[3]);
+
+        float pointSize = _style->getWavePointSize();
+        glPointSize(pointSize);
+        
         switch (myBuffChans) {
             case 1:
                 glBegin(GL_LINE_STRIP);

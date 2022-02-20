@@ -28,6 +28,7 @@
 //  Created by Christopher Carlson on 11/20/11.
 //
 
+#include "Style.h"
 #include "GrainVoice.h"
 
 //-------------------AUDIO----------------------------------------------------//
@@ -66,8 +67,9 @@ GrainVoice::~GrainVoice()
 // Constructor
 //-----------------------------------------------------------------------------
 
-GrainVoice::GrainVoice(vector<AudioFile *> * soundSet,float durationMs,float thePitch){
-    
+GrainVoice::GrainVoice(Style *style,
+                       vector<AudioFile *> * soundSet,float durationMs,float thePitch){
+    _style = style;
     
     //store pointer to external vector of sound files 
     theSounds = soundSet; 
@@ -542,20 +544,35 @@ GrainVis::~GrainVis(){
 
 
 //constructor
-GrainVis::GrainVis(unsigned int winWidth, unsigned int winHeight,
+GrainVis::GrainVis(Style *style,
+                   unsigned int winWidth, unsigned int winHeight,
                    float x, float y)
 {
+    _style = style;
+    
     _winWidth = winWidth;
     _winHeight = winHeight;
     
     _gX = x;
     _gY = y;
-    colR = 1.0;
-    colB = 1.0;
-    colG = 1.0;
-    colA = 0.6;
-    defG = colG;
-    defB = colB;
+    
+    float grainVisColor[4];
+    _style->getGrainVisColor(grainVisColor);
+    colR = grainVisColor[0];
+    colG = grainVisColor[1];
+    colB = grainVisColor[2];
+    colA = grainVisColor[3];
+
+    float grainVisDefColor[4];
+    _style->getGrainVisDefColor(grainVisDefColor);
+    defR = grainVisDefColor[0];
+    defG = grainVisDefColor[1];
+    defB = grainVisDefColor[2];
+    defA = grainVisDefColor[3];
+    
+    //defG = colG;
+    //defB = colB;
+    
     _defSize = 10.0f;
     _mySize = _defSize;
     _onSize = 30.0f;
@@ -609,8 +626,10 @@ void GrainVis::draw()
                 isOn = false;
         }else{
             mult = 1.0-exp(-t_sec/(0.2*durSec));
+            colR = mult*defR;
             colG = mult*defG;
             colB = mult*defB;
+            colA = mult*defA;
             _mySize = _defSize + (1.0 - mult)*(_onSize-_defSize);
             
         }

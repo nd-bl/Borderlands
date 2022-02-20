@@ -26,6 +26,7 @@
 //  Created by Christopher Carlson on 11/23/11.
 //
 
+#include "Style.h"
 #include "GrainCluster.h"
 
 
@@ -52,8 +53,11 @@ GrainCluster::~GrainCluster()
 
 
 //Constructor
-GrainCluster::GrainCluster(vector<AudioFile*> * soundSet, float theNumVoices)
+GrainCluster::GrainCluster(Style *style,
+                           vector<AudioFile*> * soundSet, float theNumVoices)
 {
+    _style = style;
+    
   //initialize mutext
     myLock = new Mutex();
     //cluster id
@@ -115,7 +119,7 @@ GrainCluster::GrainCluster(vector<AudioFile*> * soundSet, float theNumVoices)
     //populate grain cloud
     for (int i = 0; i < numVoices; i++)
     {
-        myGrains->push_back(new GrainVoice( theSounds, duration, pitch));
+        myGrains->push_back(new GrainVoice(_style, theSounds, duration, pitch));
     }
 
     //set volume of cloud to unity
@@ -353,7 +357,7 @@ void GrainCluster::nextBuffer(double * accumBuff,unsigned int numFrames)
     
     if (addFlag == true){
         addFlag = false;
-        myGrains->push_back(new GrainVoice(theSounds,duration,pitch));
+        myGrains->push_back(new GrainVoice(_style, theSounds,duration,pitch));
         int idx = myGrains->size()-1;
         myGrains->at(idx)->setWindow(windowType);
         switch (myDirMode) {
@@ -586,9 +590,12 @@ GrainClusterVis::~GrainClusterVis(){
         delete myGrainsV;
 }
 
-GrainClusterVis::GrainClusterVis(unsigned int winWidth, unsigned int winHeight,
+GrainClusterVis::GrainClusterVis(Style *style,
+                                 unsigned int winWidth, unsigned int winHeight,
                                  float x, float y, unsigned int numVoices,vector<SoundRect*>*rects)
 {
+    _style = style;
+    
     _winWidth = winWidth;
     _winHeight = winHeight;
     
@@ -622,7 +629,7 @@ GrainClusterVis::GrainClusterVis(unsigned int winWidth, unsigned int winHeight,
     
     for (int i = 0; i < numVoices; i++)
     {
-        myGrainsV->push_back(new GrainVis(_winWidth,_winHeight,gcX,gcY));
+        myGrainsV->push_back(new GrainVis(_style, _winWidth,_winHeight,gcX,gcY));
     }
 
     numGrains = numVoices;
@@ -692,9 +699,19 @@ void GrainClusterVis::draw()
     glTranslatef((GLfloat)gcX,(GLfloat)gcY,0.0);
     //Grain cluster representation
     if (isSelected)
-        glColor4f(0.1,0.7,0.6,0.35);
+    {
+        float grainColor[4];
+        _style->getGrainColor(grainColor);
+        glColor4f(grainColor[0], grainColor[1],
+                  grainColor[2], grainColor[3]);
+    }
     else
-        glColor4f(0.0,0.4,0.7,0.3);
+    {
+        float grainColorSelected[4];
+        _style->getGrainColorSelected(grainColorSelected);
+        glColor4f(grainColorSelected[0], grainColorSelected[1],
+                  grainColorSelected[2], grainColorSelected[3]);
+    }
     
     selRad = _minSelRad + 0.5*(_maxSelRad-_minSelRad)*sin(2*PI*(freq*t_sec + 0.125));
     gluDisk(gluNewQuadric(),selRad, selRad+5.0, 128,2);
@@ -820,7 +837,7 @@ void GrainClusterVis::setSelectState(bool selectState){
 void GrainClusterVis::addGrain()
 {
 //    addFlag = true;
-    myGrainsV->push_back(new GrainVis(_winWidth, _winHeight, gcX,gcY));
+    myGrainsV->push_back(new GrainVis(_style, _winWidth, _winHeight, gcX,gcY));
     numGrains= myGrainsV->size();
 }
 

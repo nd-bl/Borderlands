@@ -38,16 +38,17 @@ VPATH = osc ip ip/posix
 # the binary objects to compile 
 # (only the first one should contain a main() )
 OBJ_FILES = \
-	Borderlands.o \
+    Borderlands.o \
     SoundRect.o \
     GTime.o\
     AudioFileSet.o \
-	MyRtAudio.o \
+    MyRtAudio.o \
     Window.o \
     GrainVoice.o \
     GrainCluster.o \
-	Stk.o \
-	Thread.o \
+    Style.o \
+    Stk.o \
+    Thread.o \
     RtAudio.o \
 
 

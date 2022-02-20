@@ -1,0 +1,242 @@
+#include "Style.h"
+
+void
+Style::getBackgroundColor(float col[4])
+{
+    for (int i = 0; i < 4; i++)
+        col[i] = _backgroundColor[i];
+}
+
+float
+Style::getAxisLineWidth()
+{
+    return _axisLineWidth;
+}
+
+void
+Style::getAxisXColor(float col[4])
+{
+    for (int i = 0; i < 4; i++)
+        col[i] = _axisXColor[i];
+}
+
+void
+Style::getAxisYColor(float col[4])
+{
+    for (int i = 0; i < 4; i++)
+        col[i] = _axisYColor[i];
+}
+
+void
+Style::getAxisZColor(float col[4])
+{
+    for (int i = 0; i < 4; i++)
+        col[i] = _axisZColor[i];
+}
+
+float
+Style::getUsageLineWidth()
+{
+    return _usageLineWidth;
+}
+
+void
+Style::getUsageAColorCoeff(float colCoeff[4])
+{
+    for (int i = 0; i < 4; i++)
+        colCoeff[i] = _usageAColCoeff[i];
+}
+
+void
+Style::getUsageInsColorCoeff(float colCoeff[4])
+{
+    for (int i = 0; i < 4; i++)
+        colCoeff[i] = _usageInsColCoeff[i];
+}
+
+float
+Style::getManualLineWidth()
+{
+    return _manualLineWidth;
+}
+
+void
+Style::getManualInsColor(float col[4])
+{
+    for (int i = 0; i < 4; i++)
+        col[i] = _manualInsColor[i];
+}
+
+void
+Style::getParamColor(float col[4])
+{
+    for (int i = 0; i < 4; i++)
+        col[i] = _paramColor[i];
+}
+
+void
+Style::getGrainColor(float col[4])
+{
+    for (int i = 0; i < 4; i++)
+        col[i] = _grainColor[i];
+}
+
+void
+Style::getGrainColorSelected(float col[4])
+{
+    for (int i = 0; i < 4; i++)
+        col[i] = _grainColorSelected[i];
+}
+
+void
+Style::getGrainVisColor(float col[4])
+{
+    for (int i = 0; i < 4; i++)
+        col[i] = _grainVisColor[i];
+}
+
+void
+Style::getGrainVisDefColor(float col[4])
+{
+    for (int i = 0; i < 4; i++)
+        col[i] = _grainVisDefColor[i];
+}
+
+bool
+Style::getRandSoundRectColor()
+{
+    return _randSoundRectColor;
+}
+
+void
+Style::getSoundRectColorCoeff(float col[4])
+{
+    for (int i = 0; i < 4; i++)
+        col[i] = _soundRectColorCoeff[i];
+}
+
+void
+Style::getSoundRectColorSelected(float col[4])
+{
+    for (int i = 0; i < 4; i++)
+        col[i] = _soundRectColorSelected[i];
+}
+
+float
+Style::getSoundRectLineWidth()
+{
+    return _soundRectLineWidth;
+}
+
+void
+Style::getWaveColor(float col[4])
+{
+    for (int i = 0; i < 4; i++)
+        col[i] = _waveColor[i];
+}
+
+float
+Style::getWaveLineWidth()
+{
+    return _waveLineWidth;
+}
+
+float
+Style::getWavePointSize()
+{
+    return _wavePointSize;
+}
+
+//
+DefaultStyle::DefaultStyle()
+{
+    _backgroundColor[0] = 0.15;
+    _backgroundColor[1] = 0.15;
+    _backgroundColor[2] = 0.15;
+    _backgroundColor[3] = 1.0;
+
+    _axisLineWidth = 0.9;
+    
+    _axisXColor[0] = 1.0;
+    _axisXColor[1] = 0.0;
+    _axisXColor[2] = 0.0;
+    _axisXColor[3] = 0.9;
+
+    _axisYColor[0] = 0.0;
+    _axisYColor[1] = 1.0;
+    _axisYColor[2] = 0.0;
+    _axisYColor[3] = 0.9;
+
+    _axisZColor[0] = 0.0;
+    _axisZColor[1] = 0.0;
+    _axisZColor[2] = 1.0;
+    _axisZColor[3] = 0.7;
+
+    _usageLineWidth = 2.0;
+    
+    _usageAColCoeff[0] = 1.0;
+    _usageAColCoeff[1] = 1.0;
+    _usageAColCoeff[2] = 1.0;
+    _usageAColCoeff[3] = 1.0;
+
+    _usageInsColCoeff[0] = 1.0;
+    _usageInsColCoeff[1] = 1.0;
+    _usageInsColCoeff[2] = 1.0;
+    _usageInsColCoeff[3] = 1.0;
+
+    _manualLineWidth = 2.0;
+    
+    _manualInsColor[0] = 0.6;
+    _manualInsColor[1] = 0.6;
+    _manualInsColor[2] = 0.6;
+    _manualInsColor[3] = 0.6;
+
+    _paramColor[0] = 1.0;
+    _paramColor[1] = 1.0;
+    _paramColor[2] = 1.0;
+    _paramColor[3] = 1.0;
+
+    _grainColor[0] = 0.1;
+    _grainColor[1] = 0.7;
+    _grainColor[2] = 0.6;
+    _grainColor[3] = 0.35;
+
+    _grainColorSelected[0] = 0.0,
+    _grainColorSelected[1] = 0.4;
+    _grainColorSelected[2] = 0.7;
+    _grainColorSelected[3] = 0.3;
+
+    _grainVisColor[0] = 1.0;
+    _grainVisColor[1] = 1.0;
+    _grainVisColor[2] = 1.0;
+    _grainVisColor[3] = 0.6;
+
+    _grainVisDefColor[0] = 1.0;
+    _grainVisDefColor[1] = 1.0;
+    _grainVisDefColor[2] = 1.0;
+    _grainVisDefColor[3] = 1.0;
+        
+    _randSoundRectColor = false;
+    
+    _soundRectColorCoeff[0] = 1.0;
+    _soundRectColorCoeff[1] = 1.0;
+    _soundRectColorCoeff[2] = 1.0;
+    _soundRectColorCoeff[3] = 1.0;
+
+    _soundRectColorSelected[0] = 0.1;
+    _soundRectColorSelected[1] = 0.7;
+    _soundRectColorSelected[2] = 0.6;
+    _soundRectColorSelected[3] = 0.35;
+
+    _soundRectLineWidth = 2.0;
+
+    _waveColor[0] = 1.0;
+    _waveColor[1] = 1.0;
+    _waveColor[2] = 1.0;
+    _waveColor[3] = 1.0;
+
+    _waveLineWidth = 0.3;
+    _wavePointSize = 1.0;
+}
+
+DefaultStyle::~DefaultStyle() {}

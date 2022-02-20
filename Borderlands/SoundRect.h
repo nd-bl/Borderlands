@@ -56,7 +56,7 @@ using namespace std;
 
 //id for this class, which is incremented for each instance
 //static unsigned int boxId = 0;
-
+class Style;
 class SoundRect
 {
     
@@ -66,7 +66,7 @@ public:
     virtual ~SoundRect();
     
     //constructor (default)
-    SoundRect(unsigned int winWidth, unsigned int winHeight);
+    SoundRect(Style *style, unsigned int winWidth, unsigned int winHeight);
 
     // when win size changes
     void updateWinWidthHeight(unsigned int newWinWidth,
@@ -144,7 +144,7 @@ private:
     double buffMult;
     bool orientation;
     
-    
+    Style *_style;
 };
 
 #endif

@@ -51,7 +51,7 @@
 //forward declarations
 class GrainVoice;
 class GrainVis;
-
+class Style;
 
 
 //AUDIO CLASS
@@ -63,7 +63,8 @@ public:
     virtual ~GrainVoice();
     
     // constructor
-    GrainVoice(vector<AudioFile *> * soundSet,float durationMs,float thePitch);
+    GrainVoice(Style *style,
+               vector<AudioFile *> * soundSet,float durationMs,float thePitch);
     
     //dump samples into next buffer
     void nextBuffer(double * accumBuff,unsigned int numFrames,unsigned int bufferPos, int name);
@@ -147,6 +148,8 @@ private:
     //-1 means not in current soundfile
     double * playPositions;
     double * playVols;
+
+    Style *_style;
 };
 
 
@@ -160,7 +163,8 @@ public:
     //destructor
     ~GrainVis();
     //constructor
-    GrainVis(unsigned int winWidth, unsigned int winHeight,
+    GrainVis(Style *style,
+             unsigned int winWidth, unsigned int winHeight,
              float x, float y);
 
     void updateWinWidthHeight(unsigned int newWinWidth,
@@ -178,11 +182,14 @@ private:
     double triggerTime;
     float _gX,_gY;
     float colR,colG,colB,colA;
-    float defG, defB;
+    //float defG, defB;
+    float defR, defG, defB, defA;
     float _mySize,_defSize,_onSize;//GL point size
     float durSec;
 
     unsigned int _winWidth,_winHeight;
+
+    Style *_style;
 };
 
 
