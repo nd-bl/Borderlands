@@ -88,7 +88,7 @@ public:
     bool select(float x, float y);
 
     void toggleWaveDisplay();
-    void associateSound(double* buff,
+    void associateSound(SAMPLE* buff,
                         unsigned long buffFrames,
                         unsigned int buffChans);
     // return id
@@ -142,7 +142,7 @@ private:
     float _colA;
     
     float _minDim;
-    double *_buff;
+    SAMPLE *_buff;
     double _startTime;
     float _ups;
     

@@ -145,7 +145,7 @@ the current sample rate of %i\n",fileName.c_str(), SRATE);
             const int buffSize = 512;
             
             //we will convert the file to mono - left channel, but store the stereo frames temporarily
-            double stereoBuff[buffSize];
+            SAMPLE stereoBuff[buffSize];
             
             //length of mono buffer
             //            unsigned int monoLength = sfinfo.frames/sfinfo.channels;
@@ -160,7 +160,7 @@ the current sample rate of %i\n",fileName.c_str(), SRATE);
                                               sfinfo.channels,
                                               sfinfo.frames,
                                               sfinfo.samplerate,
-                                              new double[fullSize]));
+                                              new SAMPLE[fullSize]));
 
                                
             // accumulate the samples
@@ -169,9 +169,13 @@ the current sample rate of %i\n",fileName.c_str(), SRATE);
             do
             {
                 // read the samples as doubles
+#if USE_SAMPLES_DOUBLE
                 sf_count_t count =
                     sf_read_double(infile, &stereoBuff[0], buffSize);
-                
+#else
+                sf_count_t count =
+                    sf_read_float(infile, &stereoBuff[0], buffSize);
+#endif
                 // break if we reached the end of the file
                 // print the sample values to screen
                 for(int i = 0; i < buffSize; i++)

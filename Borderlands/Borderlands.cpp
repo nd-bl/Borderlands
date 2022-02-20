@@ -192,10 +192,13 @@ float _upDownMoveSpeed = 10.0f;
 // for negative value entry
 bool _negativeFlag = false;
 
+bool _audioBounce = false;
+FILE *_bounceFile = NULL;
+char _bounceFileName[255];
+
 //--------------------------------------------------------------------------------
 // FUNCTION PROTOTYPES
 //--------------------------------------------------------------------------------
-
 void idleFunc();
 void displayFunc();
 void reshape(int w, int h);
@@ -209,10 +212,11 @@ void mouseDrag(int x, int y);
 void mousePassiveMotion(int x, int y);
 void updateMouseCoords(int x, int y);
 void initialize();
-void draw_string(GLfloat x, GLfloat y, GLfloat z, const char * str, GLfloat scale);
-void printUsage();
-void printManual();
-void printParam();
+void drawString(GLfloat x, GLfloat y, GLfloat z, const char * str, GLfloat scale);
+void drawUsage();
+void drawManual();
+void drawParam();
+void drawBounceFile();
 void drawAxis();
 int audioCallback(void *outputBuffer, void *inputBuffer,
                   unsigned int numFrames, double streamTime,
@@ -223,7 +227,6 @@ void cleaningFunction();
 //--------------------------------------------------------------------------------
 // Cleanup code
 //--------------------------------------------------------------------------------
-
 void
 cleaningFunction()
 {
@@ -308,7 +311,46 @@ audioCallback(void *outputBuffer, void *inputBuffer,
     }
     GTime::instance()._sec += numFrames*_sampTimeSec;
     // cout << GTime::instance()._sec<<endl;
+
+    if (_bounceFile != NULL)
+        fwrite(out, sizeof(float), numFrames*CHANNELS, _bounceFile);
+    
     return 0;
+}
+
+// audio file bounce
+void
+toggleAudioBounce()
+{
+    if (!_audioBounce)
+        _audioBounce = true;
+    else
+    {
+        _audioBounce = false;
+
+        memset(_bounceFileName, 0, 255);
+    }
+
+    if (_audioBounce)
+    {
+        long tm = time(NULL);
+        
+        int rnd = rand()%1000000;
+        sprintf(_bounceFileName, "./bounces/borderlands-%ld-%d.raw", tm, rnd);
+
+        if (_bounceFile != NULL)
+            fclose(_bounceFile);
+        
+        _bounceFile = fopen(_bounceFileName, "wb");
+    }
+    else
+    {
+        if (_bounceFile != NULL)
+        {
+            fclose(_bounceFile);
+            _bounceFile = NULL;
+        }
+    }
 }
 
 //================================================================================
@@ -445,19 +487,19 @@ initialize()
     // initial state
     glClearColor(bgColor[0], bgColor[1], bgColor[2], bgColor[3]);
     
-    //enable depth buffer updates
+    // enable depth buffer updates
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
-    //set polys with counterclockwise winding to be front facing 
-    //this is gl default anyway
+    // set polys with counterclockwise winding to be front facing 
+    // this is gl default anyway
     glFrontFace(GL_CCW);
-    //set fill mode
+    // set fill mode
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     glPolygonMode(GL_FRONT_AND_BACK, GL_POLYGON_SMOOTH);
-    //enable transparency
+    // enable transparency
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    //antialias lines and points
+    // antialias lines and points
     glEnable(GL_LINE_SMOOTH);
     glEnable(GL_POINT_SMOOTH);
     glHint(GL_LINE_SMOOTH_HINT,GL_NICEST);
@@ -522,15 +564,18 @@ displayFunc()
         
          // print current param if editing
         if ((_selectedCloud >= 0) || (_selectedRect >= 0))
-            printParam();
+            drawParam();
+
+        if (_bounceFile != NULL)
+            drawBounceFile();
     }
     else
     {
-        printUsage();
-        printManual();
+        drawUsage();
+        drawManual();
     }
     
-    //printUsage();
+    //drawUsage();
     
     // POP ---//restore state
     glPopMatrix();
@@ -624,8 +669,8 @@ drawAxis()
 // desc: from sndpeek source - Ge Wang, et al
 //-----------------------------------------------------------------------------
 void
-draw_string(GLfloat x, GLfloat y, GLfloat z,
-            const char * str, GLfloat scale = 1.0f)
+drawString(GLfloat x, GLfloat y, GLfloat z,
+           const char * str, GLfloat scale = 1.0f)
 {
     GLint len = strlen(str);
     GLint i;
@@ -644,7 +689,7 @@ draw_string(GLfloat x, GLfloat y, GLfloat z,
 // Show usage on screen.  TODO:  add usage info 
 //-----------------------------------------------------------------------------
 void
-printUsage()
+drawUsage()
 {
     float smallSize = 0.03f;
     float mediumSize = 0.04f;
@@ -657,11 +702,11 @@ printUsage()
     _style->getUsageAColorCoeff(colCoeffA);
     glColor4f(a*colCoeffA[0], a*colCoeffA[1],
               a*colCoeffA[2], a*colCoeffA[3]);
-    draw_string(_winWidth/2.0f + 0.2f*(float)_winWidth,
-                (float)_winHeight/2.0f,
-                0.5f,
-                "BORDERLANDS",
-                (float)_winWidth*0.1f);
+    drawString(_winWidth/2.0f + 0.2f*(float)_winWidth,
+               (float)_winHeight/2.0f,
+               0.5f,
+               "BORDERLANDS",
+               (float)_winWidth*0.1f);
    
     a = 0.6f + 0.2*sin(0.9*PI*GTime::instance()._sec);
     float insColor = a*0.4f;
@@ -673,9 +718,9 @@ printUsage()
               insColor*colCoeffIns[2],
               a*colCoeffIns[3]);
     // key info
-    draw_string(_winWidth/2.0f + 0.2f*(float)_winWidth + 10.0,
-                (float)_winHeight/2.0f + 30.0, 0.5f,"CLICK TO START",
-                (float)_winWidth*0.04f);
+    drawString(_winWidth/2.0f + 0.2f*(float)_winWidth + 10.0,
+               (float)_winHeight/2.0f + 30.0, 0.5f,"CLICK TO START",
+               (float)_winWidth*0.04f);
 
     a = 0.6f + 0.2*sin(1.0*PI*GTime::instance()._sec);
     insColor = a*0.4f;
@@ -683,18 +728,17 @@ printUsage()
               insColor*colCoeffIns[2], a*colCoeffIns[3]);
     
     // key info
-    draw_string(_winWidth/2.0f + 0.2f*(float)_winWidth+10.0,
-                (float)_winHeight/2.0f + 50.0, 0.5f,
-                "ESCAPE TO QUIT",
-                (float)_winWidth*0.04f);
-    
+    drawString(_winWidth/2.0f + 0.2f*(float)_winWidth+10.0,
+               (float)_winHeight/2.0f + 50.0, 0.5f,
+               "ESCAPE TO QUIT",
+               (float)_winWidth*0.04f);
 }
 
 //-----------------------------------------------------------------------------
 // Show all the commands and keys on screen.
 //-----------------------------------------------------------------------------
 void
-printManual()
+drawManual()
 {
     float smallSize = 0.03f;
     float mediumSize = 0.04f;
@@ -749,7 +793,9 @@ printManual()
             "T key            Switch spatialization modes",
             "L key (+ shift)  Adjust playback rate LFO frequency",
             "K key (+ shift)  Adjust playback rate LFO amplitude",
-            "B key (+ shift)  Adjust cloud volume in dB"
+            "B key (+ shift)  Adjust cloud volume in dB",
+            "------------",
+            "Spacebar         Toggle audio bounce"
         };
             
     float x = (float)_winWidth*0.1;
@@ -761,13 +807,13 @@ printManual()
     for (int i = 0; i < sizeof(commands)/sizeof(char *); i++)
     {
         const char *cmd = commands[i];
-        draw_string(x, y + i*yStep, 0.5,
-                    cmd, size);
+        drawString(x, y + i*yStep, 0.5,
+                   cmd, size);
     }
 }
 
 void
-printParam()
+drawParam()
 {
     if ((_numClouds > 0) && (_selectedCloud >=0))
     {
@@ -782,8 +828,8 @@ printParam()
 
         float paramColor[4];
         _style->getParamColor(paramColor);
-        glColor4f(paramColor[0],paramColor[1],
-                  paramColor[2],a*paramColor[3]);
+        glColor4f(paramColor[0], paramColor[1],
+                  paramColor[2], a*paramColor[3]);
         
         switch (_currentParam)
         {
@@ -791,11 +837,11 @@ printParam()
                 value = "Voices: ";
                 sinput << cloud->getNumVoices();            
                 value = value+ sinput.str();
-                draw_string((GLfloat)_mouseX,
-                            (GLfloat)(_winHeight-_mouseY),
-                            0.0,
-                            value.c_str(),
-                            100.0f);
+                drawString((GLfloat)_mouseX,
+                           (GLfloat)(_winHeight-_mouseY),
+                           0.0,
+                           value.c_str(),
+                           100.0f);
                 break;
                 
             case DURATION:
@@ -810,11 +856,11 @@ printParam()
                     value = value + _paramString + " ms";
                 }
                 
-                draw_string((GLfloat)_mouseX,
-                            (GLfloat)(_winHeight-_mouseY),
-                            0.0,
-                            value.c_str(),
-                            100.0f);
+                drawString((GLfloat)_mouseX,
+                           (GLfloat)(_winHeight-_mouseY),
+                           0.0,
+                           value.c_str(),
+                           100.0f);
                 // value = "Duration (ms): " + cloud->getDurationMs();
                 break;
                 
@@ -850,33 +896,33 @@ printParam()
                         break;
                 }
                 
-                draw_string((GLfloat)_mouseX,
-                            (GLfloat)(_winHeight-_mouseY),
-                            0.0,
-                            value.c_str(),
-                            100.0f);
+                drawString((GLfloat)_mouseX,
+                           (GLfloat)(_winHeight-_mouseY),
+                           0.0,
+                           value.c_str(),
+                           100.0f);
                 break;
                 
             case MOTIONX:
                 value = "X: ";
                 sinput << cloudVis->getXRandExtent();
                 value = value + sinput.str();
-                draw_string((GLfloat)_mouseX,
-                            (GLfloat)(_winHeight-_mouseY),
-                            0.0,
-                            value.c_str(),
-                            100.0f);
+                drawString((GLfloat)_mouseX,
+                           (GLfloat)(_winHeight-_mouseY),
+                           0.0,
+                           value.c_str(),
+                           100.0f);
                 break;
                 
             case MOTIONY:
                 value = "Y: ";
                 sinput << cloudVis->getYRandExtent();
                 value = value + sinput.str();
-                draw_string((GLfloat)_mouseX,
-                            (GLfloat)(_winHeight-_mouseY),
-                            0.0,
-                            value.c_str(),
-                            100.0f);
+                drawString((GLfloat)_mouseX,
+                           (GLfloat)(_winHeight-_mouseY),
+                           0.0,
+                           value.c_str(),
+                           100.0f);
                 break;
                 
             case MOTIONXY:
@@ -885,11 +931,11 @@ printParam()
                 value = value + sinput.str() + ", ";
                 sinput2 << cloudVis->getYRandExtent();
                 value = value + sinput2.str();
-                draw_string((GLfloat)_mouseX,
-                            (GLfloat)(_winHeight-_mouseY),
-                            0.0,
-                            value.c_str(),
-                            100.0f);
+                drawString((GLfloat)_mouseX,
+                           (GLfloat)(_winHeight-_mouseY),
+                           0.0,
+                           value.c_str(),
+                           100.0f);
                 break;
                 
             case DIRECTION:
@@ -911,11 +957,11 @@ printParam()
                         value = "";
                         break;
                 }
-                draw_string((GLfloat)_mouseX,
-                            (GLfloat)(_winHeight-_mouseY),
-                            0.0,
-                            value.c_str(),
-                            100.0f);  
+                drawString((GLfloat)_mouseX,
+                           (GLfloat)(_winHeight-_mouseY),
+                           0.0,
+                           value.c_str(),
+                           100.0f);  
                 break;
                 
             case SPATIALIZE:
@@ -937,11 +983,11 @@ printParam()
                         value = "";
                         break;
                 }
-                draw_string((GLfloat)_mouseX,
-                            (GLfloat)(_winHeight-_mouseY),
-                            0.0,
-                            value.c_str(),
-                            100.0f);  
+                drawString((GLfloat)_mouseX,
+                           (GLfloat)(_winHeight-_mouseY),
+                           0.0,
+                           value.c_str(),
+                           100.0f);  
                 break;
                 
             case VOLUME:
@@ -955,11 +1001,11 @@ printParam()
                 {
                     value = value + _paramString;
                 }
-                draw_string((GLfloat)_mouseX,
-                            (GLfloat)(_winHeight-_mouseY),
-                            0.0,
-                            value.c_str(),
-                            100.0f);
+                drawString((GLfloat)_mouseX,
+                           (GLfloat)(_winHeight-_mouseY),
+                           0.0,
+                           value.c_str(),
+                           100.0f);
                 break;
                 
             case OVERLAP:
@@ -973,11 +1019,11 @@ printParam()
                 {
                     value = value + _paramString;
                 }
-                draw_string((GLfloat)_mouseX,
-                            (GLfloat)(_winHeight-_mouseY),
-                            0.0,
-                            value.c_str(),
-                            100.0f);
+                drawString((GLfloat)_mouseX,
+                           (GLfloat)(_winHeight-_mouseY),
+                           0.0,
+                           value.c_str(),
+                           100.0f);
                 // value = "Duration (ms): " + cloud->getDurationMs();
                 break;
                 
@@ -992,11 +1038,11 @@ printParam()
                 {
                     value = value + _paramString;
                 }
-                draw_string((GLfloat)_mouseX,
-                            (GLfloat)(_winHeight-_mouseY),
-                            0.0,
-                            value.c_str(),
-                            100.0f);
+                drawString((GLfloat)_mouseX,
+                           (GLfloat)(_winHeight-_mouseY),
+                           0.0,
+                           value.c_str(),
+                           100.0f);
                 // value = "Duration (ms): " + cloud->getDurationMs();
                 break;
                 
@@ -1011,11 +1057,11 @@ printParam()
                 {
                     value = value + _paramString;
                 }
-                draw_string((GLfloat)_mouseX,
-                            (GLfloat)(_winHeight-_mouseY),
-                            0.0,
-                            value.c_str(),
-                            100.0f);
+                drawString((GLfloat)_mouseX,
+                           (GLfloat)(_winHeight-_mouseY),
+                           0.0,
+                           value.c_str(),
+                           100.0f);
                 // value = "Duration (ms): " + cloud->getDurationMs();
                 break;
                 
@@ -1030,11 +1076,11 @@ printParam()
                 {
                     value = value + _paramString;
                 }
-                draw_string((GLfloat)_mouseX,
-                            (GLfloat)(_winHeight-_mouseY),
-                            0.0,
-                            value.c_str(),
-                            100.0f);
+                drawString((GLfloat)_mouseX,
+                           (GLfloat)(_winHeight-_mouseY),
+                           0.0,
+                           value.c_str(),
+                           100.0f);
                 // value = "Duration (ms): " + cloud->getDurationMs();
                 break;
                 
@@ -1042,6 +1088,31 @@ printParam()
                 break;
         }
     }
+}
+
+void
+drawBounceFile()
+{
+    if (_bounceFile == NULL)
+        return;
+
+    float a = 0.6f + 0.2*sin(0.8*PI*GTime::instance()._sec);
+
+    float paramColor[4];
+    _style->getParamColor(paramColor);
+    glColor4f(paramColor[0], paramColor[1],
+              paramColor[2], a*paramColor[3]);
+
+    char str[255];
+    sprintf(str, "*** Bouncing to: %s ***",
+            _bounceFileName);
+
+#define BORDER 0.02
+    drawString(BORDER*(float)_winWidth,
+               (float)_winHeight - BORDER*_winHeight,
+               0.5f,
+               str,
+               (float)_winWidth*0.1f);
 }
 
 //================================================================================
@@ -1665,8 +1736,8 @@ keyboardFunc(unsigned char key, int x, int y)
         case 'h':
             break;
             
-        case ' ': // add delete
-            break;
+            //case ' ': // add delete
+            //break;
             
         case 'X':
         case 'x':
@@ -1751,6 +1822,10 @@ keyboardFunc(unsigned char key, int x, int y)
             break;
             
         case '>':
+            break;
+
+        case ' ':
+            toggleAudioBounce();
             break;
             
         default:
@@ -2040,8 +2115,8 @@ main(int argc, char ** argv)
     {
         _soundViews->push_back(new SoundRect(_style, _winWidth, _winHeight));
         _soundViews->at(i)->associateSound(_sounds->at(i)->_wave,
-                                          _sounds->at(i)->_frames,
-                                          _sounds->at(i)->_channels);
+                                           _sounds->at(i)->_frames,
+                                           _sounds->at(i)->_channels);
     }
     
     // init grain cloud vector and corresponding view vector

@@ -31,15 +31,21 @@
 #ifndef GLOBALS_H
 #define GLOBALS_H
 
-
 #include <stdlib.h>
 #include <GTime.h>
 
+#define USE_SAMPLE_FLOAT 1
+
 // create sample datatype
+#if USE_SAMPLES_DOUBLE
 #define SAMPLE double
+#else
+#define SAMPLE float
+#endif
 
 // create rtaudio format
-#define FORMAT RTAUDIO_FLOAT64
+//#define FORMAT RTAUDIO_FLOAT64
+#define FORMAT RTAUDIO_FLOAT32
 
 // set the sample rate
 #define SRATE 44100

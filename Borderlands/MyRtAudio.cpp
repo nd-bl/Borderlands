@@ -28,129 +28,133 @@
 //   date: fall 2011
 //-----------------------------------------------------------------------------
 
+#include "globals.h"
 #include "MyRtAudio.h"
+
 using namespace std;
 
-
-//destructor
 MyRtAudio::~MyRtAudio()
 {
-    //cleanup   
-    delete audio;
-    //cerr << "rtaudio cleanup reached " << endl;
+    // cleanup   
+    delete _audio;
+    // cerr << "rtaudio cleanup reached " << endl;
 }
 
-MyRtAudio::MyRtAudio(unsigned int numIns, unsigned int numOuts, unsigned int srate, unsigned int * bufferSize,  RtAudioFormat format,bool showWarnings)
+MyRtAudio::MyRtAudio(unsigned int numIns,
+                     unsigned int numOuts,
+                     unsigned int srate,
+                     unsigned int *bufferSize,
+                     RtAudioFormat format,
+                     bool showWarnings)
 {
-    //configure RtAudio
-    //create pointer to RtAudio object
-    audio = NULL;
-    //create the object
-    try {
-        audio = new RtAudio();
-    } catch (RtAudioError & err) {
+    // configure RtAudio
+    // create pointer to RtAudio object
+    _audio = NULL;
+    // create the object
+    try
+    {
+        _audio = new RtAudio();
+    } catch(RtAudioError &err)
+    {
         err.printMessage();
         exit(1);
     }
     
-    //io
-    numInputs = numIns;
-    numOutputs = numOuts;
+    // io
+    _numInputs = numIns;
+    _numOutputs = numOuts;
     
     //check audio devices
-    if ( audio->getDeviceCount() < 1)
+    if (_audio->getDeviceCount() < 1)
     {
-        //no audio available
+        // no audio available
         cout << "No Audio Devices Found!" << endl;
-        exit( 1 );
+        exit(1);
     }
     
-    //allow RtAudio to print msgs to stderr
-    audio->showWarnings( showWarnings );
+    // allow RtAudio to print msgs to stderr
+    _audio->showWarnings(showWarnings);
     
-    //store pointer to bufferSize
-    myBufferSize = bufferSize;
+    // store pointer to bufferSize
+    _bufferSize = bufferSize;
     
-    //set sample rate;
-    mySRate = srate;
+    // set sample rate;
+    _sampleRate = srate;
     
-    //set format
-    myFormat = format;
-    
-
+    // set format
+    _format = format;
 }
 
 
-//set the audio callback and start the audio stream
-void MyRtAudio::openStream( RtAudioCallback callback){
-    
-    //create stream options
+// set the audio callback and start the audio stream
+void
+MyRtAudio::openStream(RtAudioCallback callback)
+{
+    // create stream options
     RtAudio::StreamOptions options;
+    //options.flags |= RTAUDIO_NONINTERLEAVED;
     
-    RtAudio::StreamParameters iParams, oParams;
-    //i/o params
-    iParams.deviceId = audio->getDefaultInputDevice();
-    iParams.nChannels = numInputs;
+    RtAudio::StreamParameters iParams;
+    RtAudio::StreamParameters oParams;
+    
+    // i/o params
+    iParams.deviceId = _audio->getDefaultInputDevice();
+    iParams.nChannels = _numInputs;
     iParams.firstChannel = 0;
-    oParams.deviceId = audio->getDefaultOutputDevice();
-    oParams.nChannels = numOutputs;
+    oParams.deviceId = _audio->getDefaultOutputDevice();
+    oParams.nChannels = _numOutputs;
     oParams.firstChannel = 0;
     
-    //open stream
-    audio->openStream( &oParams, &iParams, RTAUDIO_FLOAT64, mySRate, myBufferSize, callback, NULL, &options); 
-
-        
+    // open stream
+    _audio->openStream(&oParams, &iParams,
+                       FORMAT, _sampleRate,
+                       _bufferSize,
+                       callback, NULL, &options); 
 }
 
+// report the current buffer size
+unsigned int
+MyRtAudio::getBufferSize()
+{        
+    cerr << "Buffer size defined by RtAudio: " << (*_bufferSize) << endl;
 
-//report the current buffer size
-unsigned int MyRtAudio::getBufferSize(){
-        
-    cerr << "Buffer size defined by RtAudio: " << (*myBufferSize) << endl;
-    return (*myBufferSize);
-
+    return (*_bufferSize);
 }           
 
-
-//start rtaudio stream
-void MyRtAudio::startStream(){
-    //start audio stream
-    audio->startStream();
-    
+// start rtaudio stream
+void
+MyRtAudio::startStream()
+{
+    // start audio stream
+    _audio->startStream();
 }
 
-//stop rtaudio stream
-void MyRtAudio::stopStream(){
-    //try to stop audio stream
-    try {
-        audio->stopStream();
-    } catch( RtAudioError & err) {
+// stop rtaudio stream
+void
+MyRtAudio::stopStream()
+{
+    // try to stop audio stream
+    try
+    {
+        _audio->stopStream();
+    }
+    catch(RtAudioError &err)
+    {
         err.printMessage();
     }
 }
 
-//close audio stream
-void MyRtAudio::closeStream(){
-    audio->closeStream();
+// close audio stream
+void
+MyRtAudio::closeStream()
+{
+    _audio->closeStream();
 }
 
-
-//report the stream latency
-void MyRtAudio::reportStreamLatency(){
-    //report latency
-    cout << "Stream Latency: " << audio->getStreamLatency() << " frames" << endl;    
+// report the stream latency
+void
+MyRtAudio::reportStreamLatency()
+{
+    // report latency
+    cout << "Stream Latency: " << _audio->getStreamLatency() << " frames" << endl;    
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-

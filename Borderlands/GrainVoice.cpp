@@ -121,8 +121,8 @@ GrainVoice::GrainVoice(Style *style,
     _queuedPitch = _pitch;
     
     // spatialization
-    _queuedChanMults = new double[CHANNELS];
-    _chanMults = new double[CHANNELS];
+    _queuedChanMults = new SAMPLE[CHANNELS];
+    _chanMults = new SAMPLE[CHANNELS];
     // set panning values - all channels active by default
     for (int i = 0; i < CHANNELS; i++)
     {
@@ -152,8 +152,8 @@ GrainVoice::GrainVoice(Style *style,
 //this should not be an issue unless the overlap value is erroneous 
 //-----------------------------------------------------------------------------
 bool
-GrainVoice::playMe(double * startPositions,
-                   double * startVols)
+GrainVoice::playMe(double *startPositions,
+                   double *startVols)
 {
     if (!_playingState)
     { 
@@ -207,7 +207,7 @@ GrainVoice::isPlaying()
 // Set channel multipliers
 //-----------------------------------------------------------------------------
 void
-GrainVoice::setChannelMultipliers(double *multipliers)
+GrainVoice::setChannelMultipliers(SAMPLE *multipliers)
 {
     for (int i = 0; i < CHANNELS; i++)
         _queuedChanMults[i] = multipliers[i];
@@ -334,7 +334,7 @@ GrainVoice::setDirection(float dir)
 // Compute next sub buffer of audio
 //-----------------------------------------------------------------------------
 void
-GrainVoice::nextBuffer(double *accumBuff,
+GrainVoice::nextBuffer(SAMPLE *accumBuff,
                        unsigned int numFrames,
                        unsigned int bufferOffset,
                        int name)
@@ -361,7 +361,7 @@ GrainVoice::nextBuffer(double *accumBuff,
         int nextSound = -1;
         
         // waveform params
-        double * wave = NULL;
+        SAMPLE *wave = NULL;
         int channels = 0;
         unsigned int frames = 0;
         

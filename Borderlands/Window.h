@@ -57,7 +57,7 @@ public:
     static Window &instance();
     
     // return window
-    double *getWindow(unsigned int windowType);
+    SAMPLE *getWindow(unsigned int windowType);
     
     // resize windows - future possibility, but probably not needed
     // void resizeWindows(unsigned long length);
@@ -69,23 +69,23 @@ protected:
     void generateWindows(unsigned long length);
     
     // window function prototypes
-    void hanning(double * window, unsigned long length);
+    void hanning(SAMPLE *window, unsigned long length);
     
-    // void trapezoid(double * window, unsigned long length);
-    void triangle(double * window, unsigned long length);
-    void expdec(double * forWin, double* revWin, unsigned long length);
-    void sinc(double * window, unsigned long length, int numZeroCross = 6);
+    // void trapezoid(SAMPLE *window, unsigned long length);
+    void triangle(SAMPLE *window, unsigned long length);
+    void expdec(SAMPLE *forWin, SAMPLE *revWin, unsigned long length);
+    void sinc(SAMPLE *window, unsigned long length, int numZeroCross = 6);
 
 private:
     ~Window();
     Window(unsigned long length = 2048);
     
-    double *_hanningWin;
-    //double * trapWin;
-    double *_triWin;
-    double *_expDecWin;
-    double *_rexpDecWin;
-    double *_sincWin;
+    SAMPLE *_hanningWin;
+    //SAMPLE * trapWin;
+    SAMPLE *_triWin;
+    SAMPLE *_expDecWin;
+    SAMPLE *_rexpDecWin;
+    SAMPLE *_sincWin;
 };
 
 #endif

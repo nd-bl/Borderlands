@@ -365,7 +365,7 @@ SoundRect::setUps()
 //}
 
 void
-SoundRect::associateSound(double * buff,
+SoundRect::associateSound(SAMPLE *buff,
                           unsigned long buffFrames,
                           unsigned int buffChans)
 {    

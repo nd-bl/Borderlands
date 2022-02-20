@@ -32,54 +32,55 @@
 #ifndef __MYRTAUDIO_H
 #define __MYRTAUDIO_H
 
-
 #include "RtAudio.h"
+
 #include <cstdio>
 #include <stdio.h>
 #include <cstdlib>
 #include <stdlib.h>
 
-class MyRtAudio{
-
+class MyRtAudio
+{
 public:
-    
-    //destructor
     virtual ~MyRtAudio();
     
-    //constructor - args = 
-    MyRtAudio(unsigned int numIns, unsigned int numOuts, unsigned int srate, unsigned int * bufferSize,  RtAudioFormat format,bool showWarnings);
+    MyRtAudio(unsigned int numIns,
+              unsigned int numOuts,
+              unsigned int srate,
+              unsigned int *bufferSize,
+              RtAudioFormat format,
+              bool showWarnings);
     
+    // set the audio callback and start the audio stream
+    void openStream(RtAudioCallback callback);
     
-    //set the audio callback and start the audio stream
-    void openStream( RtAudioCallback callback);
-    
-    //report the current buffer size
+    // report the current buffer size
     unsigned int getBufferSize();
     
-    //start audio stream
+    // start audio stream
     void startStream();
     
-    //stop audio stream
+    // stop audio stream
     void stopStream();
     
-    //close audio stream
+    // close audio stream
     void closeStream();
     
-    //report the stream latency
+    // report the stream latency
     void reportStreamLatency();
-    
        
 private:
-    //rtaudio pointer
-    RtAudio * audio;
-    unsigned int numInputs;
-    unsigned int numOutputs;
+    // rtaudio pointer
+    RtAudio *_audio;
+    unsigned int _numInputs;
+    unsigned int _numOutputs;
     
-    //buffer size, sample rate, rt audio format
-    //note: buffer size is handled as pointer to unsigned int passed in externally.  this allows shared access, but is risky.
-    unsigned int * myBufferSize;
-    unsigned int mySRate;
-    RtAudioFormat myFormat;
+    // buffer size, sample rate, rt audio format
+    // note: buffer size is handled as pointer to unsigned int passed
+    // in externally.  this allows shared access, but is risky.
+    unsigned int * _bufferSize;
+    unsigned int _sampleRate;
+    RtAudioFormat _format;
 };
 
 #endif

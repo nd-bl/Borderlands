@@ -65,7 +65,7 @@ public:
                float thePitch);
     
     // dump samples into next buffer
-    void nextBuffer(double *accumBuff,
+    void nextBuffer(SAMPLE *accumBuff,
                     unsigned int numFrames,
                     unsigned int bufferPos,
                     int name);
@@ -91,7 +91,7 @@ public:
     float getVolume();
     
     // set spatialization
-    void setChannelMultipliers(double *multipliers);
+    void setChannelMultipliers(SAMPLE *multipliers);
     
     // set playback direction
     void setDirection(float thedir);
@@ -131,8 +131,8 @@ private:
     float _queuedLocalAtten;
     
     // panning values
-    double *_chanMults;
-    double *_queuedChanMults;
+    SAMPLE *_chanMults;
+    SAMPLE *_queuedChanMults;
     
     // audio files being sampled
     vector<int> *_activeSounds;
@@ -146,7 +146,7 @@ private:
     double _winReader;
     
     // pointer to audio window (hanning, triangle, etc.)
-    double *_window;
+    SAMPLE *_window;
     
     //array of position values (in frames, not samples)
     //-1 means not in current soundfile

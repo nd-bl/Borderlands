@@ -97,7 +97,7 @@ GrainCluster::GrainCluster(Style *style,
     _pitchLFOAmount = 0.0f;
     
     // initialize channel multiplier array
-    _channelMults = new double[CHANNELS];
+    _channelMults = new SAMPLE[CHANNELS];
     for (int i = 0; i < CHANNELS; i++)
         _channelMults[i] = 0.999f;
     
@@ -373,7 +373,7 @@ GrainCluster::getNumVoices()
 
 // compute audio
 void
-GrainCluster::nextBuffer(double * accumBuff,unsigned int numFrames)
+GrainCluster::nextBuffer(SAMPLE * accumBuff,unsigned int numFrames)
 {
     if (_addFlag)
     {
@@ -814,8 +814,8 @@ void GrainClusterVis::draw()
 // get trigger position/volume relative to sound rects for single grain voice
 void
 GrainClusterVis::getTriggerPos(unsigned int idx,
-                               double * playPos,
-                               double * playVol,
+                               double *playPos,
+                               double *playVol,
                                float dur)
 {
     bool trigger = false;

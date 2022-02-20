@@ -81,7 +81,7 @@ public:
                  vector<AudioFile *> *soundSet, float numVoices);
     
     // compute next buffer of audio (accumulate from grains)
-    void nextBuffer(double * accumBuff, unsigned int numFrames);
+    void nextBuffer(SAMPLE *accumBuff, unsigned int numFrames);
     
     // CLUSTER PARAMETER accessors/mutators
     // set duration for all grains
@@ -172,7 +172,7 @@ private:
     GrainClusterVis *_vis; 
     
     // spatialization
-    double *_channelMults;
+    SAMPLE *_channelMults;
     int _spatialMode;
     int _channelLocation;
 
