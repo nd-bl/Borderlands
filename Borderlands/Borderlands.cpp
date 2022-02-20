@@ -708,6 +708,9 @@ drawFps()
               paramColor[2], a*paramColor[3]);
     
     glLineWidth(2.0f);
+
+    glPushMatrix();
+    glTranslatef(_position.x, _position.y, 0.0);
     
     const float scale = 0.06;
     drawString(0.0 + (float)_winWidth*scale*0.25, // x
@@ -715,6 +718,8 @@ drawFps()
                0.5f,
                fpsStr,
                (float)_winWidth*scale);
+
+    glPopMatrix();
 }
 
 //-----------------------------------------------------------------------------
@@ -744,6 +749,9 @@ drawString(GLfloat x, GLfloat y, GLfloat z,
 void
 drawUsage()
 {
+    glPushMatrix();
+    glTranslatef(_position.x, _position.y, 0.0);
+    
     float smallSize = 0.03f;
     float mediumSize = 0.04f;
     float usageLineWidth = _style->getUsageLineWidth();
@@ -755,6 +763,7 @@ drawUsage()
     _style->getUsageAColorCoeff(colCoeffA);
     glColor4f(a*colCoeffA[0], a*colCoeffA[1],
               a*colCoeffA[2], a*colCoeffA[3]);
+
     drawString(_winWidth/2.0f + 0.2f*(float)_winWidth,
                (float)_winHeight/2.0f,
                0.5f,
@@ -785,6 +794,8 @@ drawUsage()
                (float)_winHeight/2.0f + 50.0, 0.5f,
                "ESCAPE TO QUIT",
                (float)_winWidth*0.04f);
+
+    glPopMatrix();
 }
 
 //-----------------------------------------------------------------------------
@@ -856,6 +867,9 @@ drawManual()
     
     float yStep = (float)_winWidth*0.01f;
     float size = (float)_winWidth*0.06f;
+
+    glPushMatrix();
+    glTranslatef(_position.x, _position.y, 0.0);
     
     for (int i = 0; i < sizeof(commands)/sizeof(char *); i++)
     {
@@ -863,6 +877,8 @@ drawManual()
         drawString(x, y + i*yStep, 0.5,
                    cmd, size);
     }
+
+    glPopMatrix();
 }
 
 void
@@ -1160,12 +1176,17 @@ drawBounceFile()
     sprintf(str, "*** Bouncing to: %s ***",
             _bounceFileName);
 
+    glPushMatrix();
+    glTranslatef(_position.x, _position.y, 0.0);
+    
 #define BORDER 0.02
     drawString(BORDER*(float)_winWidth,
                (float)_winHeight - BORDER*_winHeight,
                0.5f,
                str,
                (float)_winWidth*0.1f);
+
+    glPopMatrix();
 }
 
 //================================================================================
