@@ -2065,6 +2065,9 @@ mouseDrag(int x, int y)
                     {
                         xDiff = x - _lastDragX;
                         yDiff = y - _lastDragY;
+
+                        xDiff *= -1.0;
+                        yDiff *= -1.0;
                         
                         // get width and height
                         float newWidth = _soundViews->at(_selectedRect)->getWidth();
