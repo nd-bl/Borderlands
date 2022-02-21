@@ -1,0 +1,37 @@
+Entry/Exit
+------------
+ESC	        Quit
+? key	        Hide/Show Title Screen
+
+Rectangles
+------------
+Left click	Select
+Drag	        Move
+TAB key	        Cycle selection of overlapping rectangles under mouse
+R key + drag	Resize
+F key	        Flip orientation
+
+Cloud Addition and Selection
+------------
+G key (+ shift)	Add (remove) cloud to/from end of collection
+Delete key	Remove selected cloud
+Left click	Select
+Drag	        Move
+
+Cloud Parameters
+------------
+V key (+ shift)	  Add (remove) voices
+A key	          Toggle cloud on/off
+D key (+ shift)	  Increment (decrement) duration
+D key + numbers	  Enter duration value (ms) - press Enter to accept
+S key (+ shift)	  Increment (decrement) overlap
+S key + numbers	  Enter overlap value - press Enter to accept
+Z key (+ shift)	  Increment (decrement) pitch
+Z key + numbers	  Enter pitch value - press Enter to accept
+W key	          Change window type (HANNING, TRIANGLE, EXPDEC, REXPDEC, SINC, RANDOM)
+W key + 
+1 through 6	  Jump to specific window type
+F key	          Switch grain direction (FORWARD, BACKWARD, RANDOM)
+R key	          Enable mouse control of XY extent of grain position randomness
+X key	          Enable mouse control of X extent of grain position randomness
+Y key	          Enable mouse control of Y extent of grain position randomness
