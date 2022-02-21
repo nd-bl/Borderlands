@@ -35,3 +35,8 @@ F key	          Switch grain direction (FORWARD, BACKWARD, RANDOM)
 R key	          Enable mouse control of XY extent of grain position randomness
 X key	          Enable mouse control of X extent of grain position randomness
 Y key	          Enable mouse control of Y extent of grain position randomness
+
+T key		  Switch spatialization modes
+L key (+ shift)   Adjust playback rate LFO frequency
+K key (+ shift)   Adjust playback rate LFO amplitude
+B key (+ shift)   Adjust cloud volume in dB

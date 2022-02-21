@@ -8,7 +8,7 @@ UNAME := $(shell uname)
 ifeq ($(UNAME), Linux)
 #FLAGS=-D__LINUX_ALSASEQ__ -D__UNIX_JACK__  -DOSC_HOST_LITTLE_ENDIAN -c
 #FLAGS=-D__LINUX_ALSASEQ__ -D__LINUX_ALSA__  -DOSC_HOST_LITTLE_ENDIAN -c -g #-O3
-FLAGS=-D__LINUX_PULSE__ -D__OS_LINUX__ -DOSC_HOST_LITTLE_ENDIAN -c -g #-O3
+FLAGS=-D__LINUX_PULSE__ -D__OS_LINUX__ -DOSC_HOST_LITTLE_ENDIAN -c -g -O3
 
 LIBS=-lpulse -lpulse-simple -lpthread -ljack -lstdc++ -lglut -lGL -lGLU -lm -lsndfile
 endif
